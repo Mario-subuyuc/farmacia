@@ -1,10 +1,14 @@
 import User from '../models/user.model.js';
 import { publicUser, publicSession } from '../views/auth.view.js';
 
-const validEmail = (email) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+function validEmail(email) {
+  // Comprobación básica: texto@texto.texto, sin espacios.
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailPattern.test(email);
+}
 
-const authError = (res, error, fallbackMessage) => {
+// Ambos controladores usan esta función para responder a errores de Supabase.
+function authError(res, error, fallbackMessage) {
   // No registrar contraseñas, tokens ni el cuerpo de la petición.
   console.error('Supabase Auth:', error.code ?? error.name);
 
@@ -23,13 +27,19 @@ const authError = (res, error, fallbackMessage) => {
   return res.status(400).json({
     message: fallbackMessage,
   });
-};
+}
 
-export const register = async (req, res) => {
+// req contiene la petición; res permite enviar la respuesta.
+export async function register(req, res) {
+  // Evita que se guarden respuestas con tokens en la caché.
   res.set('Cache-Control', 'no-store');
 
   try {
-    const { username, email, password } = req.body ?? {};
+    // 1. Leer los datos enviados y comprobar que sean texto.
+    const body = req.body || {};
+    const username = body.username;
+    const email = body.email;
+    const password = body.password;
 
     if (
       typeof username !== 'string' ||
@@ -41,6 +51,7 @@ export const register = async (req, res) => {
       });
     }
 
+    // 2. Quitar espacios del nombre y correo. La contraseña se deja tal cual.
     const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
 
@@ -62,6 +73,7 @@ export const register = async (req, res) => {
       });
     }
 
+    // 3. Esperar la respuesta del modelo: Supabase devuelve data y error.
     const { data, error } = await User.register({
       username: cleanUsername,
       email: cleanEmail,
@@ -86,6 +98,7 @@ export const register = async (req, res) => {
       });
     }
 
+    // 4. Preparar los datos con la vista y enviarlos al cliente.
     return res.status(201).json({
       message: 'Usuario registrado correctamente.',
       user: publicUser(data.user),
@@ -98,13 +111,15 @@ export const register = async (req, res) => {
       message: 'Error interno del servidor.',
     });
   }
-};
+}
 
-export const login = async (req, res) => {
+export async function login(req, res) {
   res.set('Cache-Control', 'no-store');
 
   try {
-    const { email, password } = req.body ?? {};
+    const body = req.body || {};
+    const email = body.email;
+    const password = body.password;
 
     if (
       typeof email !== 'string' ||
@@ -117,6 +132,7 @@ export const login = async (req, res) => {
       });
     }
 
+    // await espera el resultado sin bloquear las demás peticiones del servidor.
     const { data, error } = await User.login({
       email: email.trim().toLowerCase(),
       password,
@@ -152,4 +168,4 @@ export const login = async (req, res) => {
       message: 'Error interno del servidor.',
     });
   }
-};
+}

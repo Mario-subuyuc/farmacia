@@ -5,16 +5,14 @@ import {
   SUPABASE_PUBLISHABLE_KEY,
 } from './config.js';
 
-export const createSupabaseClient = () => {
-  return createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
-    }
-  );
-};
+// Cada operación usa su propio cliente para no compartir sesiones de usuarios.
+export function createSupabaseClient() {
+  return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      // El backend no guarda ni renueva la sesión del usuario.
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}

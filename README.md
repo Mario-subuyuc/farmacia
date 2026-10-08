@@ -1,71 +1,146 @@
-# API de autenticación con Supabase
+﻿# Mi primera API con Node, Express y Supabase
 
-Backend de Express con registro e inicio de sesión mediante Supabase Auth.
+Este proyecto permite registrar usuarios e iniciar sesión. Por ahora contiene solo el backend; todavía no hay una aplicación de React.
 
-## Arquitectura MVC para una API
+Node ejecuta JavaScript en el servidor. Express recibe las peticiones HTTP. Supabase Auth guarda los usuarios y comprueba sus contraseñas.
 
-Flujo: petición HTTP → ruta → controlador → modelo → Supabase Auth.
-El controlador utiliza la vista para dar formato a la respuesta JSON.
+## Iniciar el proyecto
 
-- `src/index.js`: inicia el servidor.
-- `src/app.js`: configura Express, middleware y rutas.
-- `src/config/config.js`: carga y valida las variables de entorno.
-- `src/config/database.js`: crea clientes de Supabase sin persistir sesiones en el servidor.
-- `src/routes/auth.routes.js`: relaciona las URL con los controladores.
-- `src/controllers/auth.controller.js`: valida entradas y decide respuestas y estados HTTP.
-- `src/models/user.model.js`: encapsula las operaciones de usuarios en Supabase Auth.
-- `src/views/auth.view.js`: selecciona los campos públicos de usuario y sesión.
+1. Ejecuta `npm install`.
+2. Si no tienes `.env`, copia `.env.example` a `.env` y completa la URL y la clave publicable de Supabase. Conserva tu `.env` si ya está configurado.
+3. Habilita la autenticación por correo en Supabase y configura la confirmación de correo y las URL de redirección para tu aplicación.
+4. Ejecuta `npm run dev`. Nodemon reinicia el servidor cuando guardas cambios. Usa `npm start` para ejecutarlo sin reinicios automáticos.
 
-La vista aquí es una representación JSON; no hay páginas HTML ni frontend.
-El modelo no necesita un esquema de Mongoose: Supabase Auth administra los usuarios
-en su esquema `auth` y se encarga de las contraseñas. `username` se guarda en
-`user_metadata`. Estos metadatos no deben usarse para roles o permisos.
-No se necesita crear una tabla propia para el registro e inicio de sesión actuales.
-Si agregas datos de negocio, crea tablas y políticas RLS y accede a ellas desde modelos.
+El puerto por defecto es `3000`. Las rutas actuales son POST: abrir `http://localhost:3000` en el navegador no ejecuta el registro ni el inicio de sesión.
 
-## Ejecutar
+## Qué hace cada archivo
 
-1. Instala las dependencias con `npm install`.
-2. Copia `.env.example` a `.env` si todavía no existe y completa la URL y la clave
-   publicable de tu proyecto Supabase. No sobrescribas una configuración existente.
-3. En Supabase, habilita la autenticación por correo y configura la confirmación
-   de correo y las URL de redirección según tu aplicación.
-4. Ejecuta `npm run dev` para desarrollo o `npm start` para iniciar sin nodemon.
+| Archivo | Responsabilidad |
+| --- | --- |
+| `src/index.js` | Inicia el servidor. |
+| `src/app.js` | Configura Express, la lectura de JSON y las rutas. |
+| `src/config/config.js` | Lee `.env` y valida la configuración. |
+| `src/config/database.js` | Crea el cliente para hablar con Supabase. |
+| `src/routes/auth.routes.js` | Conecta cada URL con su controlador. |
+| `src/controllers/auth.controller.js` | Lee y valida los datos, llama al modelo y responde. |
+| `src/models/user.model.js` | Registra usuarios e inicia sesión usando Supabase. |
+| `src/views/auth.view.js` | Selecciona los datos que se devolverán como JSON. |
 
-## Endpoints
+## Cómo usamos MVC
 
-Envía `Content-Type: application/json`.
+- **Modelo:** trabaja con los datos. Aquí llama a Supabase Auth.
+- **Vista:** prepara lo que recibe el cliente. Aquí son datos JSON, no HTML.
+- **Controlador:** coordina la petición, las validaciones y la respuesta.
 
-### `POST /api/register`
+Las rutas deciden qué controlador ejecutar. El modelo no envía respuestas HTTP y la vista no consulta Supabase. El controlador usa ambos.
 
-```json
-{ "username": "mario", "email": "mario@example.com", "password": "una-clave-larga" }
+```text
+Petición → Ruta → Controlador → Modelo → Supabase
+                     ↑                    |
+                     └──── resultado ─────┘
+                     |
+                     ↓
+                    Vista → Respuesta JSON
 ```
 
-Requiere un nombre de 3 a 50 caracteres, correo válido y contraseña de al menos
-8 caracteres. Supabase también aplica la política de contraseñas del proyecto.
-Devuelve `201` con usuario y sesión si se inicia sesión inmediatamente, o `202`
-con `session: null` cuando no se recibe sesión, por ejemplo si requiere confirmar
-el correo. La respuesta es genérica para evitar revelar cuentas existentes.
+Si hay un error o falta confirmar el correo, el controlador responde directamente con un mensaje.
 
-### `POST /api/login`
+## Ejemplo: registrar un usuario
 
-```json
-{ "email": "mario@example.com", "password": "una-clave-larga" }
+Envía una petición con Postman u otro cliente HTTP:
+
+```http
+POST http://localhost:3000/api/register
+Content-Type: application/json
 ```
 
-Devuelve `200` con usuario y sesión; credenciales incorrectas o correo sin
-confirmar devuelven `401`. Ambas rutas conservan las validaciones y el manejo de
-errores de Supabase (`400`, `429`, `503`) y errores inesperados (`500`).
+```json
+{
+  "username": "mario",
+  "email": "mario@example.com",
+  "password": "una-clave-larga"
+}
+```
 
-El cliente que consume la API debe gestionar los tokens recibidos. Este proyecto
-todavía no incluye renovación de sesiones, cierre de sesión ni rutas protegidas.
+1. `app.js` convierte el JSON en `req.body` y pasa la petición a las rutas `/api`.
+2. La ruta `/register` ejecuta `register` del controlador.
+3. El controlador comprueba el nombre (3 a 50 caracteres), el correo y la contraseña (al menos 8 caracteres). Quita espacios del nombre y correo; deja la contraseña tal cual.
+4. `User.register()` llama a `supabase.auth.signUp()`. Supabase también aplica la política de contraseñas configurada en tu proyecto.
+5. Si Supabase devuelve una sesión, la vista prepara los datos y el controlador responde con `201`, `message`, `user` y `session`.
+6. Si no hay sesión, responde con `202` y `session: null`. Puede ser necesario confirmar el correo. El mensaje es genérico para no revelar cuentas existentes.
 
-## Migración
+Supabase administra las contraseñas. `username` se guarda en `user_metadata` como información adicional; esos datos no sirven para decidir roles o permisos. No necesitas crear una tabla propia para estas dos operaciones.
 
-Se reemplazó el modelo residual de Mongoose por operaciones de Supabase Auth y se
-eliminó `src/config.js`, que estaba vacío. Las dependencias ya no incluían MongoDB
-ni Mongoose. Esto adapta el código; no importa usuarios o datos de una base antigua.
+## Ejemplo: iniciar sesión
 
-Referencias: [registro](https://supabase.com/docs/reference/javascript/auth-signup),
-[inicio de sesión](https://supabase.com/docs/reference/javascript/auth-signinwithpassword).
+```http
+POST http://localhost:3000/api/login
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "mario@example.com",
+  "password": "una-clave-larga"
+}
+```
+
+El recorrido es el mismo, pero el modelo usa `signInWithPassword()`. Si todo va bien, recibes `200`, `message`, `user` y `session`. Si las credenciales son incorrectas o el correo no está confirmado, recibes `401`.
+
+## JavaScript que encontrarás
+
+- `import` trae funciones o valores de otro archivo; `export` permite usarlos fuera.
+- `const` crea una variable que no se puede reasignar.
+- `function` declara un bloque de código que puedes ejecutar.
+- `async` permite usar `await` para esperar operaciones como una llamada a Supabase.
+- `req` contiene la petición; `req.body` contiene los datos enviados.
+- `res.status(200).json(...)` envía un código HTTP y una respuesta JSON.
+- `return` termina la función. Después de responder, evita que siga ejecutándose.
+- `try/catch` permite responder si ocurre un error inesperado.
+- `trim()` quita espacios de los extremos; `toLowerCase()` convierte a minúsculas.
+- `const { data, error } = resultado` extrae esas dos propiedades de un objeto.
+- `{ email, password }` abrevia `{ email: email, password: password }`.
+- `error.code ?? error.name` usa `error.name` si `error.code` es `null` o `undefined`.
+
+La expresión regular en `validEmail()` comprueba un formato básico de correo: `texto@texto.texto`, sin espacios. No necesitas memorizarla para entender el recorrido de la aplicación.
+
+## Códigos de respuesta
+
+| Código | Significado en esta API |
+| --- | --- |
+| `200` | Inicio de sesión correcto. |
+| `201` | Registro correcto con sesión. |
+| `202` | Solicitud recibida, sin sesión todavía. |
+| `400` | Datos inválidos u otro error de autenticación del cliente. |
+| `401` | Credenciales incorrectas o correo sin confirmar. |
+| `429` | Demasiados intentos. |
+| `500` | Error inesperado en nuestro servidor. |
+| `503` | Servicio de autenticación no disponible. |
+
+## Dónde entraría React
+
+React sería la interfaz: formularios, botones y mensajes. Al enviar un formulario, haría una petición a esta API y mostraría la respuesta. Por ejemplo, si el frontend está servido desde el mismo origen que la API:
+
+```js
+async function iniciarSesion(email, password) {
+  const respuesta = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const datos = await respuesta.json();
+
+  if (!respuesta.ok) {
+    throw new Error(datos.message);
+  }
+
+  return datos;
+}
+```
+
+Este ejemplo explica la conexión; todavía no existe un frontend en el proyecto. Si React se ejecuta en otro puerto, habrá que configurar un proxy de desarrollo o CORS.
+
+La sesión incluye tokens: el de acceso identifica la sesión y el de renovación sirve para obtener nuevos tokens. El cliente debe gestionar la sesión. Esta API todavía no incluye renovación, cierre de sesión ni rutas protegidas. El backend crea un cliente de Supabase por operación para no compartir sesiones entre usuarios.
+
+Para estudiar el proyecto, sigue este orden: `index.js`, `app.js`, las rutas, el controlador, el modelo y la vista. Después revisa la configuración.
