@@ -169,3 +169,22 @@ export async function login(req, res) {
     });
   }
 }
+
+// React puede pedir nuevos tokens cuando la sesión está por vencer.
+export async function refresh(req, res) {
+  res.set('Cache-Control', 'no-store');
+  const token = req.body && req.body.refresh_token;
+  if (typeof token !== 'string' || !token.trim() || token.length > 8192) {
+    return res.status(400).json({ message: 'refresh_token es obligatorio.' });
+  }
+  try {
+    const { data, error } = await User.refresh(token);
+    if (error) {
+      if (!error.status || error.status >= 500 || error.status === 429) return authError(res, error, 'No se pudo renovar la sesión.');
+      return res.status(401).json({ message: 'La sesión ya no puede renovarse. Inicia sesión nuevamente.' });
+    }
+    return res.json({ message: 'Sesión renovada.', user: publicUser(data.user), session: publicSession(data.session) });
+  } catch {
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+}
