@@ -41,6 +41,9 @@ export function validateFields(body, fields, required = []) {
       if (rule.money) valid = valid && Math.abs(value * 100 - Math.round(value * 100)) < 0.00001;
     }
     if (rule.type === 'boolean') valid = typeof value === 'boolean';
+    if(rule.type==='object')valid=value!==null&&typeof value==='object'&&!Array.isArray(value);
+    if(rule.type==='color')valid=typeof value==='string'&&/^#[a-fA-F0-9]{6}$/.test(value);
+    if(rule.type==='datetime') valid=typeof value==='string'&&/^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/.test(value)&&Number.isFinite(Date.parse(value));
     if (rule.type === 'date') valid = validDate(value);
     if (rule.type === 'uuid') valid = uuid(value);
     if (rule.type === 'enum') valid = rule.values.includes(value);

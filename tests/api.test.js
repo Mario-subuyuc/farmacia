@@ -9,9 +9,14 @@ process.env.CORS_ORIGINS = 'http://localhost:5173';
 const { createApp } = await import('../src/app.js');
 const { createAuthenticate } = await import('../src/middlewares/auth.middleware.js');
 const { default: User } = await import('../src/models/user.model.js');
+const { default: Account } = await import('../src/models/account.model.js');
+const { default: PublicCatalog } = await import('../src/models/public-catalog.model.js');
 
 test('API HTTP completa con SQL local y Auth remoto simulado', async function (t) {
   const db = await testDatabase();
+  const originalPublicList = PublicCatalog.list;
+  PublicCatalog.list = async p => ({ data: (await db.query('select public.catalogo_publico($1,$2,$3,$4,$5) as data', [p.p_busqueda,p.p_sucursal,p.p_categoria,p.p_pagina,p.p_limite])).rows[0].data, error: null });
+  t.after(() => { PublicCatalog.list = originalPublicList; });
   const client = testSupabase(db);
   const middleware = createAuthenticate(function (token) {
     return { ...client, auth: { getUser: async function () {
@@ -49,6 +54,24 @@ test('API HTTP completa con SQL local y Auth remoto simulado', async function (t
     assert.equal(result.data.rol, 'GERENTE');
     assert.equal(result.data.id_sucursal, 1);
   });
+  await t.test('solo ADMIN crea usuarios; valida correo, contraseña y sucursal sin exponer secretos', async () => {
+    const original = Account.create;
+    let received;
+    Account.create = async (_, body) => { received = body; return { id_usuario: accounts.admin, rol: body.rol, activo: body.activo }; };
+    const body = { username: 'Usuario Nuevo', email: 'nuevo@example.com', password: 'Test-password-123', rol: 'VENDEDOR', id_sucursal: 1 };
+    try {
+      await request('POST', '/usuarios', body, 401, null);
+      await request('POST', '/usuarios', body, 403, 'manager');
+      await request('POST', '/usuarios', { ...body, password: '123' }, 400);
+      await request('POST', '/usuarios', { ...body, id_sucursal: null }, 400);
+      await request('POST', '/usuarios', { ...body, rol: 'SUPERADMIN' }, 400);
+      await request('POST', '/usuarios', { ...body, id_sucursal: 999999 }, 400);
+      const { result } = await request('POST', '/usuarios', body, 201);
+      assert.equal(received.email, body.email);
+      assert.equal(received.activo, true);
+      assert.ok(!JSON.stringify(result).includes(body.password));
+    } finally { Account.create = original; }
+  });
   await t.test('CORS permite React y rechaza orígenes ajenos', async function () {
     const { response } = await request('OPTIONS', '/ventas', undefined, 204, null, { Origin: 'http://localhost:5173' });
     assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
@@ -57,7 +80,10 @@ test('API HTTP completa con SQL local y Auth remoto simulado', async function (t
   await t.test('listados paginados, filtros seguros, IDs inválidos y ruta inexistente', async function () {
     const { result } = await request('GET', '/medicamentos?page=1&limit=2', undefined, 200);
     assert.equal(result.data.length, 2);
-    assert.equal(result.pagination.total, 3);
+    assert.equal(result.pagination.total, 12);
+    const descending = await request('GET', '/medicamentos?sort=desc&limit=2', undefined, 200);
+    assert.equal(descending.result.data[0].id_medicamento, 12);
+    await request('GET', '/medicamentos?sort=invalid', undefined, 400);
     await request('GET', '/medicamentos?limit=101', undefined, 400);
     await request('GET', '/medicamentos?select=salario', undefined, 400);
     await request('GET', '/medicamentos/no-es-id', undefined, 400);
@@ -148,26 +174,38 @@ test('API HTTP completa con SQL local y Auth remoto simulado', async function (t
     await request('GET', '/reportes/resumen?desde=bad&hasta=bad', undefined, 400);
     await request('GET', '/reportes/resumen?desde=2026-01-01T00:00:00Z&hasta=2027-01-01T00:00:00Z&id_sucursal=2', undefined, 403, 'manager');
   });
-  await t.test('registro/login conservan formato público y errores de autenticación', async function () {
-    const originalRegister = User.register;
+  await t.test('registro público deshabilitado; login y renovación conservan formato', async function () {
     const originalLogin = User.login;
     const originalRefresh = User.refresh;
     const session = { access_token: 'demo', refresh_token: 'demo-refresh', expires_in: 3600, token_type: 'bearer' };
     const user = { id: accounts.admin, email: 'demo@example.com', user_metadata: { username: 'demo' } };
     try {
-      User.register = async () => ({ data: { user, session: null }, error: null });
-      await request('POST', '/register', { username: 'demo', email: 'demo@example.com', password: '12345678' }, 202, null);
-      await request('POST', '/register', { username: 'x', email: 'bad', password: '1' }, 400, null);
+      await request('POST', '/register', { username: 'demo', email: 'demo@example.com', password: '12345678' }, 410, null);
       User.login = async () => ({ data: { user, session }, error: null });
       await request('POST', '/login', { email: 'demo@example.com', password: '12345678' }, 200, null);
       User.login = async () => ({ error: { code: 'invalid_credentials', status: 400 } });
       await request('POST', '/login', { email: 'demo@example.com', password: 'bad' }, 401, null);
+      User.login = async () => ({ error: { code: 'email_not_confirmed', status: 400 } });
+      const unconfirmed = await request('POST', '/login', { email: 'demo@example.com', password: '12345678' }, 401, null);
+      assert.match(unconfirmed.result.message, /todavía no está confirmado/);
       User.refresh = async () => ({ data: { user, session }, error: null });
       await request('POST', '/refresh', { refresh_token: 'demo-refresh' }, 200, null);
       await request('POST', '/refresh', {}, 400, null);
       User.refresh = async () => ({ error: { status: 400 } });
       await request('POST', '/refresh', { refresh_token: 'expired' }, 401, null);
-    } finally { User.register = originalRegister; User.login = originalLogin; User.refresh = originalRefresh; }
+    } finally { User.login = originalLogin; User.refresh = originalRefresh; }
+  });
+  await t.test('catálogo sin token, filtros reales y sin datos privados', async () => {
+    const { result } = await request('GET', '/catalogo?q=Paracetamol&id_sucursal=1&categoria=ANALGESICO', undefined, 200, null);
+    assert.equal(result.pagination.total, 1);
+    assert.equal(result.data[0].nombre, 'Paracetamol 500 mg');
+    assert.equal(result.data[0].sucursales.length, 1);
+    assert.equal(result.data[0].precio_compra, undefined);
+    assert.equal(result.data[0].sucursales[0].cantidad, undefined);
+    await request('GET', '/catalogo?page=0', undefined, 400, null);
+    await request('GET', '/catalogo?id_sucursal=abc', undefined, 400, null);
+    await request('GET', '/catalogo?limit=1000', undefined, 400, null);
+    await request('GET', '/empleados', undefined, 401, null);
   });
   await t.test('JSON mal formado y límite de tamaño tienen respuestas claras', async function () {
     const bad = await fetch(root + '/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{' });

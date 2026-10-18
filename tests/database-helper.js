@@ -25,7 +25,7 @@ export async function testDatabase() {
     grant usage on schema auth to authenticated,anon;
     grant execute on function auth.uid() to authenticated,anon;
   `);
-  for (const name of ['001_schema.sql', '002_operations.sql', 'seed.sql']) {
+  for (const name of ['001_schema.sql', '002_operations.sql', '003_public_catalog.sql', '004_demo_products.sql', '005_catalog_images.sql', '007_portal_orders.sql', '008_promotions_search.sql', '009_order_lifecycle.sql', '010_notifications.sql', '012_order_quote.sql', '013_content_audit.sql', '014_alerts_suppliers_events.sql', '015_smtp_queue.sql', '016_email_design_enrollment.sql', '017_pharmacy_operations.sql', 'seed.sql']) {
     const sql = await readFile(new URL(`../database/${name}`, import.meta.url), 'utf8');
     await db.exec(sql);
   }
@@ -55,6 +55,17 @@ export function testSupabase(db) {
   return {
     rpc: async function (name, args) {
       const queries = {
+        operar_farmacia:['select operar_farmacia($1,$2::jsonb,$3::uuid) as data',[args.p_accion,JSON.stringify(args.p_datos),args.p_clave]],
+        inscribir_evento:['select inscribir_evento($1,$2,$3,$4,$5,$6) as data',[args.p_evento,args.p_nombre,args.p_email,args.p_telefono,args.p_hash,args.p_url]],
+        confirmar_inscripcion:['select confirmar_inscripcion($1,$2) as data',[args.p_hash,args.p_cancelar]],
+        encolar_recordatorios_eventos:['select encolar_recordatorios_eventos() as data',[]],
+
+        contenido_publico:['select contenido_publico() as data',[]],
+        cotizar_pedido_portal:['select cotizar_pedido_portal($1::jsonb) as data',[JSON.stringify(args.p_datos)]],
+        crear_pedido_portal:['select crear_pedido_portal($1::jsonb,$2::uuid,$3) as data',[JSON.stringify(args.p_datos),args.p_clave,args.p_token_hash]],
+        seguir_pedido_portal:['select seguir_pedido_portal($1) as data',[args.p_token_hash]],
+        cancelar_pedido_portal:['select cancelar_pedido_portal($1) as data',[args.p_token_hash]],
+        gestionar_pedido_portal:['select gestionar_pedido_portal($1,$2,$3::jsonb) as data',[args.p_id,args.p_accion,JSON.stringify(args.p_datos)]],
         ejecutar_operacion: ['select ejecutar_operacion($1,$2::jsonb,$3::uuid) as data', [args.p_accion, JSON.stringify(args.p_datos), args.p_clave]],
         consultar_disponibilidad: ['select consultar_disponibilidad($1::jsonb) as data', [JSON.stringify(args.p_datos)]],
         reporte_empresa: ['select reporte_empresa($1::timestamptz,$2::timestamptz,$3::bigint) as data', [args.p_desde, args.p_hasta, args.p_sucursal]],
@@ -74,7 +85,7 @@ export function testSupabase(db) {
       const builder = {
         select: function () { return builder; },
         eq: function (field, value) { state.params.push(value); state.filters.push(`${identifier(field)}=$${state.params.length}`); return builder; },
-        order: function (field) { state.order = identifier(field); return builder; },
+        order: function (field, options = {}) { state.order = identifier(field) + (options.ascending === false ? ' desc' : ' asc'); return builder; },
         range: function (from, to) { state.from = from; state.limit = to - from + 1; return builder; },
         maybeSingle: function () { state.single = true; return builder; },
         single: function () { state.single = true; return builder; },

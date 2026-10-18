@@ -4,3 +4,9 @@ node_modules/
 !.env.example
 .npm-cache/
 coverage/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+.playwright-browsers/
+backups/
+artifacts/

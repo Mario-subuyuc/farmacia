@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.git
+node_modules
+frontend/node_modules
+frontend/dist
+artifacts
+backups
+.playwright-browsers
+.npm-cache
+frontend/test-results
+frontend/playwright-report
+
+**/.env
+**/.env.*
+!**/.env.example

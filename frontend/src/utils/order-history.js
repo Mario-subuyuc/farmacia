@@ -1,0 +1,2 @@
+﻿export function savedOrders(){try{const rows=JSON.parse(localStorage.getItem('nexo-order-history')||'[]');return Array.isArray(rows)?rows.filter(row=>/^[a-f0-9]{64}$/.test(row.token)).slice(0,20):[];}catch{return [];}}
+export function saveOrder(receipt){const rows=savedOrders().filter(row=>row.token!==receipt.token);localStorage.setItem('nexo-order-history',JSON.stringify([{token:receipt.token,id:receipt.data.id_pedido,total:receipt.data.total,date:new Date().toISOString()},...rows].slice(0,20)));localStorage.setItem('nexo-last-order',receipt.token);}

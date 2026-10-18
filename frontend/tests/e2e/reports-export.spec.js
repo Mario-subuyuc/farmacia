@@ -1,0 +1,11 @@
+﻿import {test,expect} from '@playwright/test';
+import ExcelJS from 'exceljs';
+import {readFile} from 'node:fs/promises';
+test('reportes: búsqueda global, filtros, orden, Excel real e impresión PDF',async({page})=>{
+ await page.goto('/#login');await page.getByLabel('Correo electrónico').fill('admin@example.com');await page.getByLabel('Contraseña',{exact:true}).fill('test-password');await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();await page.getByRole('navigation').getByRole('button',{name:'Reportes',exact:true}).click();await page.getByRole('tab',{name:'Inventario',exact:true}).click();
+ const table=page.locator('.report-table');await expect(table.locator('tbody tr').first()).toBeVisible();await table.getByRole('button',{name:/Disponible/}).click();await expect(table.locator('th[aria-sort=ascending]')).toHaveCount(1);
+ await table.getByLabel('Buscar en toda la tabla').fill('paracetamol');await expect(table.locator('tbody tr').first()).toContainText(/Paracetamol/i);await expect(table.locator('tbody tr')).not.toHaveCount(0);
+ const branchName=await table.locator('tbody tr').first().locator('td').first().textContent();await table.getByText('Filtros por columna',{exact:true}).click();await table.locator('.filter-grid').getByLabel('Sucursal',{exact:true}).fill(branchName);
+ const count=await table.locator('tbody tr').count();expect(count).toBeGreaterThan(0);const wait=page.waitForEvent('download');await table.getByRole('button',{name:'Exportar Excel (.xlsx)',exact:true}).click();const download=await wait;expect(download.suggestedFilename()).toMatch(/\.xlsx$/);const book=new ExcelJS.Workbook();await book.xlsx.load(await readFile(await download.path()));const sheet=book.worksheets[0];expect(sheet.rowCount).toBe(count+3);expect(sheet.getRow(4).getCell(1).value).toContain(branchName);expect(typeof sheet.getRow(4).getCell(5).value).toBe('number');
+ await page.addInitScript(()=>{window.print=()=>{document.body.dataset.printed='yes';};});const popupWait=page.waitForEvent('popup');await table.getByRole('button',{name:'Imprimir / PDF',exact:true}).click();const popup=await popupWait;await expect(popup.locator('tbody tr')).toHaveCount(count);await expect(popup.locator('h1')).toContainText('Reporte stock');await popup.close();
+});

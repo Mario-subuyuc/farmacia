@@ -7,10 +7,24 @@ const branchReaders = ['ADMIN', 'GERENTE', 'AUDITOR'];
 const everyone = ['ADMIN', 'GERENTE', 'VENDEDOR', 'BODEGA', 'CAJERO', 'CALL_CENTER', 'AUDITOR'];
 
 export const resources = {
+ compras:{table:'compras',id:'id_compra',read:['ADMIN','GERENTE','BODEGA','CAJERO','AUDITOR'],filters:['id_sucursal','estado']},
+ 'solicitudes-stock':{table:'solicitudes_stock',id:'id_solicitud',read:['ADMIN','GERENTE','BODEGA','AUDITOR'],filters:['id_sucursal','estado','tipo']},
+ 'devoluciones-clientes':{table:'devoluciones_clientes',id:'id_devolucion',read:['ADMIN','GERENTE','AUDITOR'],filters:['id_sucursal']},
+ 'cierres-caja':{table:'cierres_caja',id:'id_cierre',read:['ADMIN','GERENTE','CAJERO','AUDITOR'],filters:['id_sucursal']},
+ 'permisos-operativos':{table:'permisos_operativos',id:'id_usuario',uuid:true,create:false,read:['ADMIN'],write:['ADMIN'],filters:[],required:[],fields:{aprobar_receta:{type:'boolean'},confirmar_pago:{type:'boolean'},aprobar_stock:{type:'boolean'},modificar_precio:{type:'boolean'}}},
+ 'plantillas-correo':{create:false,table:'plantillas_correo',id:'id_plantilla',read:['ADMIN'],write:['ADMIN'],required:['tipo'],filters:['tipo'],fields:{marca:{type:'text',max:80},lema:{type:'text',max:150},color_principal:{type:'color'},color_fondo:{type:'color'},color_alerta:{type:'color'},introduccion:{type:'text',max:500,nullable:true},pie:{type:'text',max:500},fuente:{type:'enum',values:['Arial','Georgia']}}},
+ inscripciones:{table:'inscripciones',id:'id_inscripcion',read:['ADMIN'],filters:['id_evento','estado']},
+ proveedores:{table:'proveedores',id:'id_proveedor',read:['ADMIN','GERENTE','BODEGA','AUDITOR'],write:['ADMIN'],required:['nombre'],filters:['activo'],fields:{nombre:{type:'text',max:150},contacto:{type:'text',max:150,nullable:true},email:{type:'text',max:150,nullable:true},telefono:{type:'text',max:30,nullable:true},direccion:{type:'text',max:255,nullable:true},activo:{type:'boolean'}}},
+ eventos:{table:'eventos',id:'id_evento',read:['ADMIN','GERENTE','AUDITOR'],write:['ADMIN'],required:['id_sucursal','titulo','descripcion','inicio','fin'],filters:['id_sucursal','publicado'],fields:{id_sucursal:idField,titulo:{type:'text',max:150},descripcion:{type:'text',max:4000},inicio:{type:'datetime'},fin:{type:'datetime'},publicado:{type:'boolean'},cupo:{type:'number',min:1,max:10000,integer:true},recordatorio_horas:{type:'number',min:1,max:168,integer:true}}},
+ 'alertas-inventario':{table:'alertas_inventario',id:'id_alerta',read:['ADMIN','GERENTE','BODEGA','AUDITOR'],filters:['id_sucursal','tipo','estado']},
+  contenidos: {table:'contenidos',id:'id_contenido',read:['ADMIN'],write:['ADMIN'],required:['tipo','titulo','cuerpo'],filters:['tipo','activo'],fields:{tipo:{type:'enum',values:['MISION','VISION','PROGRAMA','FAQ']},titulo:{type:'text',max:150},cuerpo:{type:'text',max:4000},orden:{type:'number',min:0,max:9999,integer:true},activo:{type:'boolean'}}},
+  cupones: {table:'cupones',id:'id_cupon',read:['ADMIN'],write:['ADMIN'],required:['codigo','porcentaje'],filters:['activo','codigo'],fields:{codigo:{type:'text',max:30},porcentaje:{type:'number',min:0.01,max:90,money:true},minimo:moneyField,desde:{type:'date',nullable:true},hasta:{type:'date',nullable:true},max_usos:{type:'number',min:1,max:1000000,integer:true},activo:{type:'boolean'}}},
+  notificaciones: {table:'notificaciones',id:'id_notificacion',read:['ADMIN','GERENTE','AUDITOR'],filters:['estado','id_sucursal','id_pedido']},
   sucursales: {
     table: 'sucursales', id: 'id_sucursal', read: everyone, write: ['ADMIN'],
     required: ['codigo', 'nombre', 'departamento', 'direccion', 'tipo', 'latitud', 'longitud'],
     fields: {
+      costo_envio: moneyField, apertura:{type:'text',max:8},cierre:{type:'text',max:8},dias_entrega:{type:'text',max:13},
       codigo: { type: 'text', max: 30 }, nombre: { type: 'text', max: 100 },
       departamento: { type: 'text', max: 100 }, direccion: { type: 'text', max: 255 },
       telefono: { type: 'text', max: 20, nullable: true },
@@ -33,6 +47,10 @@ export const resources = {
     required: ['codigo', 'nombre', 'categoria', 'principio_activo', 'precio_compra', 'precio_venta'],
     fields: { codigo: { type: 'text', max: 30 }, nombre: { type: 'text', max: 150 },
       descripcion: { type: 'text', max: 2000, nullable: true }, categoria: { type: 'text', max: 100 },
+      id_proveedor:{...idField,nullable:true},
+      descuento_porcentaje: { type: 'number', min: 0, max: 90, money: true },
+      promocion_titulo: { type: 'text', max: 100, nullable: true },
+      promocion_desde: { type: 'date', nullable: true }, promocion_hasta: { type: 'date', nullable: true },
       principio_activo: { type: 'text', max: 150 }, precio_compra: moneyField,
       precio_venta: { ...moneyField, min: 0.01 }, requiere_receta: { type: 'boolean' },
       estado: { type: 'enum', values: ['ACTIVO', 'INACTIVO'] } }, filters: ['estado', 'categoria'],

@@ -1,10 +1,10 @@
 import { databaseError } from '../utils/http-error.js';
 
 // Recibimos el cliente del usuario, por eso cada consulta respeta RLS.
-export async function listRecords(supabase, resource, filters, page) {
+export async function listRecords(supabase, resource, filters, page, sort = 'asc') {
   let query = supabase.from(resource.table).select('*', { count: 'exact' });
   for (const [field, value] of Object.entries(filters)) query = query.eq(field, value);
-  const result = await query.order(resource.id).range(page.from, page.to);
+  const result = await query.order(resource.id, { ascending: sort === 'asc' }).range(page.from, page.to);
   if (result.error) throw databaseError(result.error);
   return result;
 }

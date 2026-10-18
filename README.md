@@ -1,6 +1,10 @@
 ﻿# Backend de una cadena de farmacias
 
-API en **Node 22 o superior, Express, MVC y Supabase (PostgreSQL + Auth)**. Solo backend, lista para consumir desde una aplicación interna de React. El código usa funciones, objetos y comentarios en español; no usa clases ni un ORM.
+API en **Node, Express, MVC y Supabase (PostgreSQL + Auth)** y aplicación interna en **React + Vite**, dentro de `frontend/`. Usa Node 22.12 o superior para ambos. El código usa funciones, objetos y comentarios en español; no usa clases ni un ORM.
+
+Para ver la interfaz, ejecuta desde esta carpeta `npm.cmd run ui:install` y luego `npm.cmd run ui`. Inicia también la API con `npm.cmd run dev`. Abre **http://localhost:5173**: la página principal muestra el catálogo público de productos y sucursales sin login. **Acceso del personal** abre el login del sistema interno. Solo ADMIN crea usuarios; no hay registro público ni demostración de operaciones.
+
+**[Guía completa de React, explicación para un junior y despliegue](frontend/README.md)**. Este README documenta principalmente la API, SQL y permisos.
 
 ## 1. Qué puedes hacer
 
@@ -159,10 +163,46 @@ Devuelve `{ "status": "ok" }`. Comprueba que Express está vivo; no comprueba la
 
 ## 5. Configurar usuarios y permisos
 
-### Crear el primer administrador
+### Catálogo y stock de prueba
 
-1. En Supabase Auth habilita correo/contraseña y configura la confirmación de correo y las URL de redirección para tu aplicación.
-2. Crea una cuenta mediante `POST /api/register` o desde Supabase Auth. Si hay confirmación por correo, confirma la cuenta antes del login.
+La migración `004_demo_products.sql` crea 12 medicamentos ficticios en las tres sucursales DEMO. Define `privado.cargar_catalogo_demo()`, que también llama `database/seed.sql`: así la migración y el seeder usan los mismos datos. No se conceden permisos públicos para ejecutar esta carga. Los datos existentes se conservan; repetir el seeder no restablece stock vendido ni modifica precios.
+
+| Producto | Guatemala | Mixco | Xela |
+| --- | ---: | ---: | ---: |
+| Paracetamol | 150 (dos lotes) | 100 | 100 |
+| Amoxicilina | 100 | 100 | 100 |
+| Suero oral | 100 | 100 | 100 |
+| Ibuprofeno | 80 | 25 | 0 |
+| Loratadina | 45 | 12 | 30 |
+| Cetirizina | 0 | 35 | 8 |
+| Omeprazol | 60 | 18 | 5 |
+| Antiácido | 15 | 0 | 22 |
+| Vitamina C | 75 | 30 | 0 |
+| Salbutamol | 12 | 4 | 0 |
+| Losartán | 20 | 0 | 0 |
+| Crema de hidrocortisona | 0 | 0 | 0 |
+
+Son cantidades **iniciales**; las operaciones posteriores pueden cambiarlas. Los ceros prueban el catálogo sin disponibilidad, los mínimos de 20 prueban alertas y los dos lotes de paracetamol prueban FEFO. Los precios, presentaciones y requisitos de receta son datos ficticios configurados para las pruebas. En una base ya utilizada, la migración añade solo lo que falta.
+
+### Crear el primer administrador (seeder)
+
+**Automático con el seeder:** ya no necesitas ejecutar el SQL manual cada vez que instalas desde cero. En el `.env` principal configura:
+
+```env
+ADMIN_SEED_EMAIL=mariosubuyucfb@gmail.com
+ADMIN_SEED_NAME=Mario
+ADMIN_SEED_PASSWORD=TU_CONTRASEÑA_PROPIA_DE_AL_MENOS_8_CARACTERES
+SUPABASE_SECRET_KEY=TU_CLAVE_PRIVADA_DEL_PROYECTO
+```
+
+Desde la raíz ejecuta `npm.cmd run db:migrate` y después `npm.cmd run db:seed`. El segundo comando carga los datos DEMO y crea tu cuenta confirmada con perfil ADMIN activo. Si la cuenta ya existe, utiliza su ID y restaura el perfil ADMIN **sin cambiar su contraseña**; no necesita crearla de nuevo. La contraseña configurada solo se usa al crear una cuenta nueva. No se imprime ni se guarda en SQL/Git. Puedes usar `SUPABASE_SERVICE_ROLE_KEY` si tu proyecto utiliza la clave antigua.
+
+`DATABASE_URL`, `SUPABASE_URL` y la clave privada deben pertenecer al mismo proyecto. `db:seed` no borra datos ni reinicia la base. Cada vez que lo ejecutas vuelve a activar y asignar ADMIN **únicamente al correo de ADMIN_SEED_EMAIL**. Para omitir ese paso, deja dicha variable vacía. El archivo `database/seed.sql` ejecutado a mano sigue cargando solo datos; la creación Auth la hace `scripts/seed-admin.js` mediante el comando Node.
+
+**Alternativa manual**, si no utilizas el seeder del administrador:
+
+1. En Supabase Auth habilita correo/contraseña y desactiva **Allow new users to sign up** para impedir el registro directo de visitantes. El catálogo no necesita cuentas ni inicio de sesión anónimo de Auth.
+2. Crea la primera cuenta mediante el seeder anterior o desde el panel administrativo de Supabase Auth. No existe registro público en la aplicación.
 3. Desde el SQL Editor, asigna el perfil inicial usando el correo real de tu cuenta:
 
 ```sql
@@ -231,12 +271,14 @@ Genera un UUID por operación, por ejemplo `crypto.randomUUID()`. En un reintent
 | Método | Ruta | Cuerpo |
 | --- | --- | --- |
 | GET | `/health` | Sin cuerpo. |
-| POST | `/register` | `username`, `email`, `password`. |
+| GET | `/catalogo` | Sin token; filtros `q`, `id_sucursal`, `categoria`, `page`, `limit`. |
 | POST | `/login` | `email`, `password`. |
 | POST | `/refresh` | `refresh_token`. |
 | GET | `/me` | Sin cuerpo; requiere sesión y devuelve el perfil empresarial. |
 
-Registro: nombre de 3 a 50 caracteres, correo válido y contraseña de 8 o más caracteres, además de la política de Supabase. Un registro sin sesión devuelve 202; con sesión devuelve 201. Login/refresh devuelven `user` y `session` en el nivel principal, conservando el contrato inicial del proyecto. Usa los nuevos tokens después de renovar; Supabase puede rotarlos.
+Login/refresh devuelven `user` y `session` en el nivel principal. Usa los nuevos tokens después de renovar; Supabase puede rotarlos. `POST /api/register` devuelve **410**: el registro público fue deshabilitado. Solo `POST /api/usuarios`, autorizado para ADMIN, crea cuentas del personal.
+
+El catálogo público devuelve nombre, descripción, categoría, principio activo, precio de venta, requisito de receta y contactos de sucursales con disponibilidad. No devuelve costos, lotes, cantidades internas, empleados ni caja. La migración `003_public_catalog.sql` crea una función de lectura con salida limitada; no otorga acceso anónimo a las tablas. La disponibilidad excluye reservas, vencimientos y registros inactivos. La búsqueda es literal por nombre, principio activo o descripción; al filtrar sucursal solo aparecen productos disponibles allí. Sin sucursal se muestran también productos activos sin disponibilidad. Paginación: 12 por defecto, máximo 48.
 
 ### CRUD de catálogos
 
@@ -508,7 +550,7 @@ Error:
 | Código | Significado |
 | --- | --- |
 | 200 / 201 | Consulta/actualización correcta o registro creado. |
-| 202 | Registro Auth recibido sin sesión todavía. |
+| 410 | Registro público deshabilitado. Las cuentas las crea ADMIN. |
 | 400 | Datos, filtros o JSON inválidos. |
 | 401 | Token ausente/vencido o credenciales inválidas. |
 | 403 | Perfil inactivo, rol/sucursal sin permiso u origen CORS no permitido. |
@@ -519,6 +561,8 @@ Error:
 | 500 / 503 | Error interno o servicio temporalmente no disponible. |
 
 ## 7. Cómo consumirlo desde React
+
+**Crear cuentas como administrador:** la interfaz ahora permite **Accesos y permisos → Crear usuario** con nombre, correo, contraseña, rol y sucursal, sin introducir UUID. Configura `SUPABASE_SECRET_KEY` (o la clave antigua `SUPABASE_SERVICE_ROLE_KEY`) exclusivamente en el `.env` del backend y reinicia Node. `POST /api/usuarios` requiere un perfil ADMIN activo; devuelve el perfil creado, nunca la contraseña ni una sesión del usuario nuevo. Este flujo habilita el correo sin mandar confirmación; el registro de visitantes esta deshabilitado. La clave privada solo administra Auth: el perfil se guarda con el token del administrador para aplicar RLS y registrar el actor. Si falla el perfil, se intenta deshacer la cuenta recién creada. No modifica cuentas preexistentes. [Instrucciones completas](frontend/README.md).
 
 Ejemplo para una interfaz **interna** con un usuario empresarial autenticado:
 
@@ -555,7 +599,7 @@ async function crearVenta(accessToken, venta, clave) {
 const clave = crypto.randomUUID();
 ```
 
-Guarda/renueva la sesión según la estrategia del frontend. `/refresh` recibe el refresh token y devuelve los tokens nuevos. La autorización del backend no depende de ocultar botones en React. El proyecto no incluye pantalla ni endpoint de cierre de sesión; borrar los tokens del cliente no revoca por sí solo una sesión de Supabase.
+El frontend guarda la sesión en `sessionStorage` de la pestaña y renueva los tokens mediante `/refresh`. La autorización del backend no depende de ocultar botones en React. El botón de salida elimina la sesión de esa pestaña; el backend no tiene un endpoint que revoque todas las sesiones de Supabase.
 
 Una futura aplicación para clientes necesitará identidad/permisos de cliente o un servicio de integración propio. No entregues a clientes finales el token de un operador CALL_CENTER: ese rol puede consultar y operar pedidos de toda la cadena. El modelo de pedidos ya conserva cliente, canal, dirección, sucursal, pago y ETA para esa futura integración.
 
@@ -580,3 +624,51 @@ Lee `index.js` → `app.js` → `business.routes.js` → `operation.controller.j
 `async/await` espera consultas sin bloquear todas las peticiones; `req.body` contiene el JSON; `res.status(...).json(...)` responde; `return` termina una función; `try/catch` maneja errores. `{ ...objeto }` copia sus propiedades; `Object.entries(objeto)` permite recorrer nombre y valor. En SQL, `FOR UPDATE` bloquea los lotes usados y `RAISE EXCEPTION` cancela la transacción. Comienza con el CRUD de clientes y luego estudia ventas/reservas.
 
 Documentación oficial: [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [funciones y RPC](https://supabase.com/docs/guides/database/functions), [verificación de usuario](https://supabase.com/docs/reference/javascript/auth-getuser), [renovación de sesión](https://supabase.com/docs/reference/javascript/auth-refreshsession).
+
+### Imágenes de medicamentos (Supabase Storage)
+
+Ejecuta `npm.cmd run db:migrate` para agregar la columna de imagen y crear el bucket público `catalogo` con políticas de subida exclusivas para ADMIN. Luego, en el panel del personal, abre Medicamentos → Imagen junto al producto y selecciona una foto JPEG, PNG o WebP de hasta 5 MB. La foto se muestra en el catálogo público; los productos sin foto conservan su ícono. No requiere claves privadas adicionales.
+
+La API recibe el archivo binario en `POST /api/medicamentos/:id/imagen`, valida tipo y firma y usa el token del administrador para subirlo. Guarda la URL en `medicamentos.imagen_url`; los archivos quedan en `catalogo/medicamentos/ID/UUID.ext`. Si falla la actualización de la base, intenta eliminar la subida. Al reemplazar una foto se conserva el archivo anterior en Storage para no romper lecturas en curso; se puede limpiar posteriormente desde Supabase. No se incluyen fotos de productos ni se suben imágenes automáticamente sin seleccionarlas.
+
+Para volver a cargar ilustraciones propias en los productos DEMO sin imagen: `node scripts/seed-catalog-images.js`. Requiere la clave privada del backend y Microsoft Edge para renderizar los PNG. Solo completa imágenes ausentes y conserva las fotos existentes. Son ilustraciones de demostración, no fotografías de presentaciones comerciales.
+
+Para reemplazar las ilustraciones DEMO por fotografías reales de Wikimedia Commons: `node scripts/seed-catalog-photos.js`. Conserva fotos subidas por usuarios fuera de la carpeta demo. Los créditos, autores y licencias se guardan en `frontend/public/catalog-photo-credits.json` y `.html`, enlazados desde el catálogo. Las fotos son referencias de otras presentaciones comerciales. El script puede reanudarse tras una descarga interrumpida.
+
+### Carrito del catálogo público
+
+El botón Carrito permite ajustar cantidades (1 a 99), eliminar productos, vaciar la selección y descargar una lista con el total estimado en quetzales. La selección se guarda en localStorage del navegador; no requiere iniciar sesión. No permite agregar medicamentos sin disponibilidad. La lista no reserva inventario, no cobra ni crea un pedido: el cliente debe confirmar precio, disponibilidad y receta en la farmacia. Los pedidos operativos siguen a cargo del personal autorizado.
+
+### Pedidos desde el carrito y seguimiento
+
+El carrito incluye animación al agregar productos y **Continuar con el pago**. El cliente introduce nombre, apellido, teléfono, dirección y coordenadas (manuales o mediante el botón de ubicación); selecciona una sucursal con sus productos y elige efectivo, tarjeta o transferencia **al recibir**. No existe una pasarela ni se solicitan datos bancarios. Los precios se calculan en PostgreSQL, se valida cobertura y stock y se reserva inventario en la misma transacción que crea cliente y pedido. Los medicamentos con receta requieren validación presencial del personal y no se confirman desde el portal.
+
+La migración `007_portal_orders.sql` incorpora operaciones RPC exclusivas de `service_role`. La API usa la clave privada existente solo en el backend, valida campos y aplica límites de solicitudes. Rutas públicas: `POST /api/tienda/pedidos` y `POST /api/tienda/seguimiento`. Los reintentos con la misma clave y datos devuelven el mismo pedido. La base conserva el hash SHA-256 del código privado de seguimiento; el código original se guarda en el navegador del cliente. No aparece en la URL ni se devuelve información de domicilio o teléfono personal en seguimiento.
+
+**Seguir mi pedido** consulta PENDIENTE → PREPARANDO → EN_CAMINO → ENTREGADO, o CANCELADO/DEVUELTO. Actualiza cada minuto y admite refresco manual. Es seguimiento del estado operativo, no posición GPS en vivo. El personal gestiona el pedido desde el módulo Pedidos existente. El código privado permite recuperar el seguimiento en otro dispositivo. Los pedidos pendientes reservan inventario hasta entrega, cancelación o devolución; el personal debe gestionar pedidos abandonados.
+
+Validación: 62 pruebas de backend, 15 de frontend y compilación. El navegador se probó con respuestas de creación/seguimiento simuladas, sin generar pedidos de prueba remotos; la conexión del seguimiento a Supabase se verificó con un código inexistente.
+
+### Página de inicio de la farmacia
+
+La raíz `http://localhost:5173/` y `#home` muestran la landing de NexoFarma: presentación, servicios, productos, pasos de compra y sucursales. Los productos y sucursales vienen del catálogo público. El catálogo sigue disponible en `#catalogo`; su logo vuelve al inicio. La landing comparte el carrito y el seguimiento existentes y se adapta a escritorio y móvil.
+
+### Promociones, contenido institucional y asistente de compras
+
+En **Medicamentos → Editar**, ADMIN puede configurar descuento (0 a 90 %), título y fechas de vigencia opcionales. El precio de venta es el regular. Con 0 se desactiva la promoción; las fechas son inclusivas según America/Guatemala. La migración `008_promotions_search.sql` calcula el precio efectivo en catálogo, disponibilidad, venta y pedido, conservando los precios históricos ya guardados. El carrito muestra estimados y el servidor confirma el importe. La landing incluye promociones vigentes, misión, visión y programas de acompañamiento; la actividad y disponibilidad de cada programa se confirma con la sucursal.
+
+Se cargaron tres promociones en productos DEMO sin descuento: Paracetamol 15 %, Loratadina 10 % y Vitamina C 20 %, vigentes durante 30 días desde su carga. `node scripts/seed-demo-promotions.js` completa únicamente estos productos cuando no tienen descuento; no modifica promociones ya configuradas.
+
+**¿Te ayudamos?** abre un asistente guiado en landing y catálogo, sin servicio de IA ni claves adicionales. Ofrece búsqueda de productos, categorías, promociones, preguntas frecuentes y seguimiento por código privado. El endpoint `POST /api/asistente/productos` acepta solo `consulta` y `categoria`; consulta la función pública de catálogo, sin SQL libre ni acceso a datos internos. Normaliza tildes y mayúsculas, filtra símbolos por expresión regular y elimina palabras comunes de preguntas. Las búsquedas parciales devuelven hasta ocho opciones; ante datos insuficientes o falta de coincidencias ofrece categorías. No interpreta texto como SQL ni como una expresión regular ejecutable, no consulta clientes, ventas o salarios, y el seguimiento reutiliza el endpoint limitado por código privado. No realiza recomendaciones de tratamiento.
+
+Validación: 64 pruebas de backend y 15 de frontend; comprobación en navegador de promociones, precios descontados, búsquedas con tildes, opciones sin resultados, FAQ y vista móvil.
+
+### Ciclo completo de pedidos y operación
+
+Las migraciones 009 a 013 incorporan recetas privadas con revisión, cotización antes de confirmar, costo y horario de entrega, cupones, confirmación atómica de pago/entrega, cancelación, vencimiento de reservas, contenido editable y cola de notificaciones. El historial de compras guarda códigos privados en el navegador. Estas funciones sustituyen las limitaciones anteriores que indicaban que el portal no admitía recetas o cancelaciones.
+
+Consulta **[Operación y despliegue](docs/OPERACION.md)** para las acciones del personal, tareas automáticas, notificaciones, copias, pruebas y despliegue. Sin proveedor contratado los pagos siguen siendo al recibir y los avisos permanecen pendientes; no hay cobros en línea ni mensajes externos simulados.
+
+### Alertas, proveedores y calendario
+
+El panel incluye **Alertas de inventario**, **Proveedores** y **Eventos y talleres**. Las alertas se calculan cada minuto para stock bajo y lotes vencidos o próximos a vencer; el correo SMTP es configurable en el backend. La landing muestra FullCalendar con actividades publicadas por sucursal. Ver [operación y configuración de Gmail](docs/OPERACION.md).

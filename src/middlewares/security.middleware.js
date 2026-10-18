@@ -12,14 +12,14 @@ export function securityHeaders(req, res, next) {
     res.set('Access-Control-Allow-Origin', origin);
     res.vary('Origin');
     res.set('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,Idempotency-Key');
+    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,Idempotency-Key,X-Upload-Token');
   }
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 }
 
 // Protección básica para login/registro. En varias instancias usar Redis/gateway.
-export function authRateLimit() {
+export function authRateLimit(maxAttempts = 20) {
   const attempts = new Map();
   const windowMs = 15 * 60 * 1000;
   return function (req, res, next) {
@@ -31,7 +31,7 @@ export function authRateLimit() {
     const entry = attempts.get(ip) || { count: 0, expires: now + windowMs };
     entry.count++;
     attempts.set(ip, entry);
-    if (entry.count > 20) {
+    if (entry.count > maxAttempts) {
       res.set('Retry-After', String(Math.ceil((entry.expires - now) / 1000)));
       throw httpError(429, 'Demasiados intentos. Intenta nuevamente más tarde.');
     }

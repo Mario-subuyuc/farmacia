@@ -12,16 +12,18 @@ function recordId(resource, value) {
 // Las rutas guardan su configuración en req.resource antes de llamar al controlador.
 export async function index(req, res) {
   const page = pagination(req.query);
+  const sort = req.query.sort || 'asc';
+  if (!['asc', 'desc'].includes(sort)) throw httpError(400, 'sort debe ser asc o desc.');
   const filters = {};
   for (const [field, value] of Object.entries(req.query)) {
-    if (field === 'page' || field === 'limit') continue;
+    if (field === 'page' || field === 'limit' || field === 'sort') continue;
     if (!req.resource.filters.includes(field) || typeof value !== 'string' || value.length > 255) {
       throw httpError(400, `Filtro no permitido: ${field}.`);
     }
     filters[field] = field.startsWith('id_') ? positiveId(value, field) : value;
     if (field === 'actor' && !uuid(value)) throw httpError(400, 'actor debe ser UUID.');
   }
-  const result = await Catalog.listRecords(req.supabase, req.resource, filters, page);
+  const result = await Catalog.listRecords(req.supabase, req.resource, filters, page, sort);
   res.json(listView(result.data, result.count, page));
 }
 
@@ -52,7 +54,7 @@ export async function update(req, res) {
 }
 
 function validateCatalog(table, data) {
-  if (table === 'clientes' && data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) throw httpError(400, 'Correo inválido.');
+  if (['clientes','proveedores'].includes(table) && data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) throw httpError(400, 'Correo inválido.');
   if (table === 'activos' && data.valor !== undefined && data.valor_residual > data.valor) throw httpError(400, 'valor_residual no puede superar valor.');
   if (table === 'activos' && data.fecha_adquisicion && new Date(`${data.fecha_adquisicion}T00:00:00Z`) > new Date()) throw httpError(400, 'fecha_adquisicion no puede ser futura.');
 }

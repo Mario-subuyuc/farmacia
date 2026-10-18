@@ -1,4 +1,9 @@
-import { Router } from 'express';
+import {operatePharmacy} from '../controllers/pharmacy-operations.controller.js';
+import { previewEmail } from '../controllers/enrollment.controller.js';
+import { uploadEventPhoto } from '../controllers/events.controller.js';
+import { managePortalOrder, prescriptionLink } from '../controllers/order-lifecycle.controller.js';
+import { Router, raw } from 'express';
+import { uploadImage } from '../controllers/catalog-image.controller.js';
 import { resources } from '../config/resources.js';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
 import * as Catalog from '../controllers/catalog.controller.js';
@@ -9,6 +14,13 @@ export function businessRoutes(authMiddleware = authenticate) {
   const router = Router();
   router.use(authMiddleware);
   router.get('/me', function (req, res) { res.json({ data: req.profile }); });
+
+  router.post('/operaciones-farmacia',authorize(['ADMIN','GERENTE','BODEGA','CAJERO']),operatePharmacy);
+  router.post('/plantillas-correo/vista-previa',authorize(['ADMIN']),previewEmail);
+  router.post('/eventos/:id/imagen',authorize(['ADMIN']),raw({type:['image/jpeg','image/png','image/webp'],limit:'5mb'}),uploadEventPhoto);
+  router.post('/pedidos/:id/gestion', authorize(['ADMIN','GERENTE','VENDEDOR']), managePortalOrder);
+  router.get('/pedidos/:id/receta', authorize(['ADMIN','GERENTE','VENDEDOR']), prescriptionLink);
+  router.post('/medicamentos/:id/imagen', authorize(['ADMIN']), raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: '5mb' }), uploadImage);
 
   // Cada fila conecta una ruta con una operación de negocio de PostgreSQL.
   const routes = [
@@ -36,7 +48,7 @@ export function businessRoutes(authMiddleware = authenticate) {
   router.post('/disponibilidad', authorize(['ADMIN', 'GERENTE', 'VENDEDOR', 'CALL_CENTER']), Operation.availability);
   router.get('/reportes/resumen', authorize(['ADMIN', 'GERENTE', 'AUDITOR']), Operation.report);
 
-  const details = { ventas: 'detalle_venta', pedidos: 'detalle_pedido', traslados: 'detalle_traslado', planillas: 'detalle_planilla' };
+  const details = { compras:'detalle_compra',ventas: 'detalle_venta', pedidos: 'detalle_pedido', traslados: 'detalle_traslado', planillas: 'detalle_planilla' };
   for (const [name, resource] of Object.entries(resources)) {
     const setResource = function (req, res, next) { req.resource = resource; next(); };
     router.get(`/${name}`, setResource, authorize(resource.read), Catalog.index);
@@ -47,7 +59,7 @@ export function businessRoutes(authMiddleware = authenticate) {
       }, Catalog.details);
     }
     if (resource.write) {
-      router.post(`/${name}`, setResource, authorize(resource.write), Catalog.store);
+      if(resource.create!==false) router.post(`/${name}`, setResource, authorize(resource.write), Catalog.store);
       router.patch(`/${name}/:id`, setResource, authorize(resource.write), Catalog.update);
     }
   }

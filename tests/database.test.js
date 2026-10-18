@@ -82,12 +82,13 @@ test('PostgreSQL: transacciones, stock, permisos, auditoría y reportes', async 
     assert.equal((await db.query('select count(*) from ventas where id_pedido=$1', [result.id_pedido])).rows[0].count, 0);
   });
   await t.test('traslado sale de origen y solo entra al confirmar recepción en destino', async function () {
-    const before = (await db.query('select cantidad from inventario where id_inventario=4')).rows[0].cantidad;
+    const destination = (await db.query("select id_inventario,cantidad from inventario where id_sucursal=2 and id_medicamento=1 and lote='DEMO-LOTE-A'")).rows[0];
+    const before = destination.cantidad;
     const result = await admin('traslado', { id_sucursal_origen: 1, id_sucursal_destino: 2, motivo: 'Reposición', items: [{ id_medicamento: 1, cantidad: 6 }] });
     transferId = result.id_traslado;
-    assert.equal((await db.query('select cantidad from inventario where id_inventario=4')).rows[0].cantidad, before);
+    assert.equal((await db.query('select cantidad from inventario where id_inventario=$1', [destination.id_inventario])).rows[0].cantidad, before);
     await asUser(db, 'warehouse', () => operation(db, 'recibir_traslado', { id_traslado: transferId }));
-    assert.equal((await db.query('select cantidad from inventario where id_inventario=4')).rows[0].cantidad, before + 6);
+    assert.equal((await db.query('select cantidad from inventario where id_inventario=$1', [destination.id_inventario])).rows[0].cantidad, before + 6);
     await assert.rejects(admin('recibir_traslado', { id_traslado: transferId }), /ya fue recibido/);
   });
   await t.test('planilla guarda salarios/ajustes y egreso; no duplica el mes', async function () {
@@ -163,11 +164,12 @@ test('PostgreSQL: transacciones, stock, permisos, auditoría y reportes', async 
     const original = (await db.query('select total from pedidos where id_pedido=$1', [result.id_pedido])).rows[0].total;
     await assert.rejects(admin('reasignar_pedido', { id_pedido: result.id_pedido, id_sucursal: 3, motivo: 'Lejos' }), /radio/);
     assert.equal((await db.query('select id_sucursal from pedidos where id_pedido=$1', [result.id_pedido])).rows[0].id_sucursal, 1);
-    const destinationStock = (await db.query('select cantidad from inventario where id_inventario=4')).rows[0].cantidad;
-    await admin('ajuste', { id_inventario: 4, diferencia: 2-destinationStock, motivo: 'Simular falta de stock' });
+    const destination = (await db.query("select id_inventario,cantidad from inventario where id_sucursal=2 and id_medicamento=1 and lote='DEMO-LOTE-A'")).rows[0];
+    const destinationStock = destination.cantidad;
+    await admin('ajuste', { id_inventario: destination.id_inventario, diferencia: 2-destinationStock, motivo: 'Simular falta de stock' });
     await assert.rejects(admin('reasignar_pedido', { id_pedido: result.id_pedido, id_sucursal: 2, motivo: 'Sin stock' }), /Stock/);
     assert.equal((await db.query('select sum(reservado) total from inventario where id_sucursal=1')).rows[0].total, 4);
-    await admin('ajuste', { id_inventario: 4, diferencia: destinationStock-2, motivo: 'Restablecer conteo' });
+    await admin('ajuste', { id_inventario: destination.id_inventario, diferencia: destinationStock-2, motivo: 'Restablecer conteo' });
     await asUser(db, 'callCenter', () => operation(db, 'reasignar_pedido', { id_pedido: result.id_pedido, id_sucursal: 2, motivo: 'Mejor cobertura' }));
     assert.equal((await db.query('select total from pedidos where id_pedido=$1', [result.id_pedido])).rows[0].total, original);
     assert.equal((await db.query('select sum(reservado) total from inventario where id_sucursal=1')).rows[0].total, 0);
