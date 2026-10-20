@@ -25,7 +25,7 @@ export async function testDatabase() {
     grant usage on schema auth to authenticated,anon;
     grant execute on function auth.uid() to authenticated,anon;
   `);
-  for (const name of ['001_schema.sql', '002_operations.sql', '003_public_catalog.sql', '004_demo_products.sql', '005_catalog_images.sql', '007_portal_orders.sql', '008_promotions_search.sql', '009_order_lifecycle.sql', '010_notifications.sql', '012_order_quote.sql', '013_content_audit.sql', '014_alerts_suppliers_events.sql', '015_smtp_queue.sql', '016_email_design_enrollment.sql', '017_pharmacy_operations.sql', 'seed.sql']) {
+  for (const name of ['001_schema.sql', '002_operations.sql', '003_public_catalog.sql', '004_demo_products.sql', '005_catalog_images.sql', '007_portal_orders.sql', '008_promotions_search.sql', '009_order_lifecycle.sql', '010_notifications.sql', '012_order_quote.sql', '013_content_audit.sql', '014_alerts_suppliers_events.sql', '015_smtp_queue.sql', '016_email_design_enrollment.sql', '017_pharmacy_operations.sql', '018_enrollment_email_delivery.sql', 'seed.sql']) {
     const sql = await readFile(new URL(`../database/${name}`, import.meta.url), 'utf8');
     await db.exec(sql);
   }
@@ -58,6 +58,10 @@ export function testSupabase(db) {
         operar_farmacia:['select operar_farmacia($1,$2::jsonb,$3::uuid) as data',[args.p_accion,JSON.stringify(args.p_datos),args.p_clave]],
         inscribir_evento:['select inscribir_evento($1,$2,$3,$4,$5,$6) as data',[args.p_evento,args.p_nombre,args.p_email,args.p_telefono,args.p_hash,args.p_url]],
         confirmar_inscripcion:['select confirmar_inscripcion($1,$2) as data',[args.p_hash,args.p_cancelar]],
+        tomar_correo_inscripcion:['select tomar_correo_inscripcion($1,$2) as data',[args.p_hash,args.p_evento]],
+        cerrar_correo_inscripcion:['select cerrar_correo_inscripcion($1,$2,$3) as data',[args.p_id,args.p_intento,args.p_ok]],
+        tomar_correos:['select tomar_correos($1) as data',[args.p_destino]],
+        cerrar_correo:['select cerrar_correo($1,$2,$3) as data',[args.p_tipo,args.p_id,args.p_ok]],
         encolar_recordatorios_eventos:['select encolar_recordatorios_eventos() as data',[]],
 
         contenido_publico:['select contenido_publico() as data',[]],

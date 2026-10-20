@@ -21,49 +21,19 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
 
 
 
-const smtpVariables = [
-  'SMTP_HOST',
-  'SMTP_PORT',
-  'SMTP_SECURE',
-  'SMTP_USER',
-  'SMTP_PASS',
-  'SMTP_FROM',
-  'ALERT_EMAIL_TO',
-  'EMAIL_WORKER_ENABLED',
-];
-
-for (const nombre of smtpVariables) {
-  const valor = process.env[nombre];
-
-  console.log(
-    `[SMTP CONFIG] ${nombre}: ${
-      valor?.trim() ? 'CONFIGURADA' : 'FALTA O ESTÁ VACÍA'
-    }`
-  );
-}
-
-console.log('[SMTP CONFIG] Validaciones:', {
-  hostGmail: process.env.SMTP_HOST === 'smtp.gmail.com',
-  puerto587: process.env.SMTP_PORT === '587',
-  secureFalse: process.env.SMTP_SECURE === 'false',
-  workerActivado: process.env.EMAIL_WORKER_ENABLED === 'true',
-});
-
-
-if (process.env.SMTP_DIAGNOSTIC_ENABLED === 'true') {
-  const { smtpTransport } = await import('../services/email.js');
-  const transport = smtpTransport();
-
-  try {
-    await transport.verify();
-    console.log('[SMTP TEST] Conexión y autenticación correctas');
-  } catch (error) {
-    console.error('[SMTP TEST] Falló:', {
-      code: error.code,
-      command: error.command,
-      responseCode: error.responseCode,
-    });
-  } finally {
-    transport.close();
+// Se valida antes de guardar una inscripción; no hay conexiones SMTP al arrancar.
+export function publicSiteUrl(env = process.env) {
+  const production = env.NODE_ENV === 'production' || Boolean(env.VERCEL);
+  let url;
+  try { url = new URL(env.PUBLIC_SITE_URL || (production ? '' : 'http://localhost:5173')); }
+  catch { throw new Error('PUBLIC_SITE_URL debe contener la URL pública del frontend.'); }
+  const host = url.hostname.toLowerCase();
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password ||
+      (production && (url.protocol !== 'https:' || host === 'localhost' || host.endsWith('.localhost') ||
+       host === '[::1]' || host === '0.0.0.0' || /^127\./.test(host)))) {
+    throw new Error('PUBLIC_SITE_URL debe ser una URL pública HTTPS en producción.');
   }
+  url.hash = '';
+  url.search = '';
+  return url;
 }
