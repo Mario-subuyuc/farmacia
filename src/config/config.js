@@ -48,3 +48,22 @@ console.log('[SMTP CONFIG] Validaciones:', {
   secureFalse: process.env.SMTP_SECURE === 'false',
   workerActivado: process.env.EMAIL_WORKER_ENABLED === 'true',
 });
+
+
+if (process.env.SMTP_DIAGNOSTIC_ENABLED === 'true') {
+  const { smtpTransport } = await import('../services/email.js');
+  const transport = smtpTransport();
+
+  try {
+    await transport.verify();
+    console.log('[SMTP TEST] Conexión y autenticación correctas');
+  } catch (error) {
+    console.error('[SMTP TEST] Falló:', {
+      code: error.code,
+      command: error.command,
+      responseCode: error.responseCode,
+    });
+  } finally {
+    transport.close();
+  }
+}
