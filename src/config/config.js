@@ -18,3 +18,33 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error('PORT debe ser un puerto válido');
 }
+
+
+
+const smtpVariables = [
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_SECURE',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'SMTP_FROM',
+  'ALERT_EMAIL_TO',
+  'EMAIL_WORKER_ENABLED',
+];
+
+for (const nombre of smtpVariables) {
+  const valor = process.env[nombre];
+
+  console.log(
+    `[SMTP CONFIG] ${nombre}: ${
+      valor?.trim() ? 'CONFIGURADA' : 'FALTA O ESTÁ VACÍA'
+    }`
+  );
+}
+
+console.log('[SMTP CONFIG] Validaciones:', {
+  hostGmail: process.env.SMTP_HOST === 'smtp.gmail.com',
+  puerto587: process.env.SMTP_PORT === '587',
+  secureFalse: process.env.SMTP_SECURE === 'false',
+  workerActivado: process.env.EMAIL_WORKER_ENABLED === 'true',
+});
