@@ -1,0 +1,15 @@
+{
+  "fecha": "2026-10-18",
+  "paginas": 103,
+  "tablas": 133,
+  "figuras": 11,
+  "indiceActualizado": true,
+  "paginasSinTexto": [],
+  "secretosDetectados": 0,
+  "metadatos": {
+    "tablas": 38,
+    "columnas": 339,
+    "relacionesFK": 69
+  },
+  "alcance": "Revisión estructural DOCX, actualización en Microsoft Word e inspección visual de páginas representativas; no aceptación institucional."
+}

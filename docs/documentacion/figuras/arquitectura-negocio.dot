@@ -1,0 +1,9 @@
+digraph G {rankdir=TB;graph [fontname="Arial",bgcolor="white",pad="0.35",nodesep="0.35",ranksep="0.6"];node [fontname="Arial",shape=box,style="rounded,filled",fillcolor="#eef6f3",color="#257363",fontcolor="#163e35",margin="0.15"];edge [fontname="Arial",fontsize=9,color="#6a847a"]; d[label="DIRECCIÓN Y GOBIERNO
+Estrategia • expansión • auditoría"];a[label="Abastecer
+Proveedor → compra → recepción"];i[label="Controlar existencias
+Lotes • reservas • vencimiento"];v[label="Atender y vender
+Sucursal • portal • call center"];e[label="Preparar y entregar
+Asignación • despacho • recepción"];f[label="Administrar recursos
+Caja • planilla • activos"];c[label="Cliente
+Consulta • compra • seguimiento"];s[label="SOPORTE
+Personal • tecnología • seguridad • capacitación"];d->a;d->v;d->f;a->i;i->v;v->e;e->c;v->f;e->f;f->d[label="Resultados y evidencia"];s->i;s->v;s->e;}

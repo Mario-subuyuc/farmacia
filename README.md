@@ -672,3 +672,11 @@ Consulta **[Operación y despliegue](docs/OPERACION.md)** para las acciones del 
 ### Alertas, proveedores y calendario
 
 El panel incluye **Alertas de inventario**, **Proveedores** y **Eventos y talleres**. Las alertas se calculan cada minuto para stock bajo y lotes vencidos o próximos a vencer; el correo SMTP es configurable en el backend. La landing muestra FullCalendar con actividades publicadas por sucursal. Ver [operación y configuración de Gmail](docs/OPERACION.md).
+
+## Interfaz y experiencia de usuario
+
+La guía de diseño, los criterios de mensajes, las confirmaciones, las preferencias de sonido y el alcance de las pruebas están documentados en [docs/UX-UI.md](docs/UX-UI.md). El botón Avisos de la cabecera permite revisar mensajes de la sesión y activar sonidos opcionales. Las alertas siempre conservan texto e icono además del color.
+
+## Documentación integral RUP
+
+[Documento Word del proyecto](docs/documentacion/NexoFarma_Documentacion_Integral_RUP.docx) y [paquete completo](docs/documentacion/NexoFarma_Documentacion_Completa.zip): visiones del negocio/sistema, arquitectura del negocio, requerimientos, tres factibilidades, E-R, diccionario de datos y desarrollo con Supabase. Consultar [instrucciones y alcance](docs/documentacion/LEEME.md).

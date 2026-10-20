@@ -537,3 +537,6 @@ table { font-size:13px; }th { font-size:12px;color:#4b6047; }td { color:#3f5848;
 .tabs button[aria-selected="true"] { color:#145e50;border-bottom:3px solid #17685d;font-weight:700; }
 .navigation-empty { padding:16px 10px;font-size:13px;color:#53674c; }.navigation-empty button { margin-top:12px; }
 .auth-access-note,.auth-footer { color:#52684b; }
+.experience-trigger.in-header,body:has(.app-layout) .experience-trigger.in-header { position:static;box-shadow:none;z-index:auto;white-space:nowrap; }
+[data-experience-tools] { display:inline-flex;align-items:center; }
+@media(max-width:600px) { .assistant-launch { width:48px;height:48px;justify-content:center;padding:10px; }.assistant-launch>span { display:none; }.home-nav-actions { gap:12px; }.experience-trigger.in-header { min-width:42px;justify-content:center; }.experience-trigger.in-header b { font-size:10px; }.account .experience-trigger { padding:8px; } }

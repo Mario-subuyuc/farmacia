@@ -1,0 +1,5 @@
+digraph G {rankdir=LR;graph [fontname="Arial",bgcolor="white",pad="0.35",nodesep="0.35",ranksep="0.6"];node [fontname="Arial",shape=box,style="rounded,filled",fillcolor="#eef6f3",color="#257363",fontcolor="#163e35",margin="0.15"];edge [fontname="Arial",fontsize=9,color="#6a847a"]; p[label="PENDIENTE
+Stock reservado"];r[label="PREPARANDO"];c[label="EN_CAMINO"];e[label="ENTREGADO
+Venta y cobro registrados"];n[label="CANCELADO
+Reservas liberadas",fillcolor="#fff0f0"];d[label="DEVUELTO
+Retorno de entrega fallida",fillcolor="#fff6df"];p->r[label="Receta aprobada si aplica"];r->c[label="Despacho / repartidor"];c->e[label="Cobro y entrega"];p->n[label="Cancelación / expiración"];r->n[label="Cancelación autorizada"];c->d[label="Retorno físico"];}

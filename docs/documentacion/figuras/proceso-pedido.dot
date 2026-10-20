@@ -1,0 +1,12 @@
+digraph G {rankdir=TB;graph [fontname="Arial",bgcolor="white",pad="0.35",nodesep="0.35",ranksep="0.6"];node [fontname="Arial",shape=box,style="rounded,filled",fillcolor="#eef6f3",color="#257363",fontcolor="#163e35",margin="0.15"];edge [fontname="Arial",fontsize=9,color="#6a847a"]; c[label="CLIENTE / OPERADOR
+Solicitar productos y ubicación"];q[label="SISTEMA
+Validar horario, cobertura y disponibilidad"];x[shape=diamond,label="¿Puede atender
+una sucursal?",fillcolor="#fff6df"];n[label="Ofrecer alternativas
+Otra sucursal / ajustar pedido"];t[label="CLIENTE / OPERADOR
+Aceptar precio, entrega y forma de pago"];r[label="SISTEMA
+Crear pedido y reservar stock en transacción"];p[label="SUCURSAL
+Revisar receta si aplica y preparar"];d[label="REPARTO
+Despachar y coordinar entrega"];z[label="SUCURSAL / CAJA
+Confirmar cobro recibido y entrega
+Registrar venta, stock y caja"];a[label="AUDITOR
+Consultar historial y evidencias"];c->q->x;x->n[label="No"];n->c;x->t[label="Sí"];t->r->p->d->z->a;}

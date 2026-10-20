@@ -1,0 +1,10 @@
+digraph G {rankdir=LR;graph [fontname="Arial",bgcolor="white",pad="0.35",nodesep="0.35",ranksep="0.6"];node [fontname="Arial",shape=box,style="rounded,filled",fillcolor="#eef6f3",color="#257363",fontcolor="#163e35",margin="0.15"];edge [fontname="Arial",fontsize=9,color="#6a847a"]; i[label="INICIO
+Semanas 1–2
+Visión y alcance"];e[label="ELABORACIÓN
+Semanas 3–6
+Riesgos y arquitectura"];c[label="CONSTRUCCIÓN
+Semanas 7–16
+Cinco iteraciones de 2 semanas"];t[label="TRANSICIÓN
+Semanas 17–20
+Piloto y transferencia"];i->e[label="LCO"];e->c[label="LCA"];c->t[label="IOC"];t->fin[label="Aceptación"];fin[label="Referencia funcional
+y plan de evolución"];}

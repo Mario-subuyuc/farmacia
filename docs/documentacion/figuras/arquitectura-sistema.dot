@@ -1,0 +1,12 @@
+digraph G {rankdir=LR;graph [fontname="Arial",bgcolor="white",pad="0.35",nodesep="0.35",ranksep="0.6"];node [fontname="Arial",shape=box,style="rounded,filled",fillcolor="#eef6f3",color="#257363",fontcolor="#163e35",margin="0.15"];edge [fontname="Arial",fontsize=9,color="#6a847a"]; b[label="Navegador
+React + Vite
+Portal e interfaz interna"];api[label="API Express / MVC
+Rutas • validación • permisos
+Controladores y modelos"];auth[label="Supabase Auth
+Identidad y JWT"];db[label="Supabase PostgreSQL
+RLS • RPC transaccionales
+Auditoría y restricciones"];st[label="Supabase Storage
+Imágenes públicas
+Recetas privadas"];job[label="Trabajadores Node
+Vencimiento • alertas • correo"];mail[label="SMTP configurado
+Envío y aceptación de mensajes"];b->api[label="HTTP JSON; HTTPS en producción"];api->auth[label="Autenticar / renovar"];api->db[label="Token del usuario / RPC"];api->st[label="Acceso autorizado"];job->db[label="Colas / reservas"];job->mail;}

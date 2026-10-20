@@ -1,0 +1,11 @@
+digraph G {rankdir=TB;graph [fontname="Arial",bgcolor="white",pad="0.35",nodesep="0.35",ranksep="0.6"];node [fontname="Arial",shape=box,style="rounded,filled",fillcolor="#eef6f3",color="#257363",fontcolor="#163e35",margin="0.15"];edge [fontname="Arial",fontsize=9,color="#6a847a"]; u[label="Clientes, sucursales y call center
+Navegadores conectados a Internet"];web[label="ESTADO ACTUAL
+Frontend y API en entorno local
+Base, Auth y Storage en Supabase"];proxy[label="PROPUESTA DE PRODUCCIÓN
+Dominio + HTTPS + proxy / límites compartidos",fillcolor="#fff6df"];app[label="Servicio de aplicación
+Frontend compilado + Express
+Reinicio y supervisión",fillcolor="#fff6df"];worker[label="Trabajador supervisado
+Programación y reintentos",fillcolor="#fff6df"];cloud[label="SUPABASE CLOUD
+PostgreSQL + Auth + Storage"];backup[label="PROPUESTA
+Copias externas + pruebas de restauración
+Base, usuarios y archivos",fillcolor="#fff6df"];u->web;u->proxy[style=dashed];proxy->app[style=dashed];app->cloud[style=dashed];worker->cloud[style=dashed];web->cloud;cloud->backup[style=dashed];}
