@@ -7,6 +7,8 @@
     "node": ">=22.12"
   },
   "scripts": {
+    "format": "prettier --write",
+    "format:check": "prettier --check",
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
@@ -31,6 +33,7 @@
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "prettier": "3.6.2",
     "vite": "^8.3.3"
   },
   "overrides": {

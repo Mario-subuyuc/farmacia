@@ -8,4 +8,8 @@ import { consumeConfirmation } from './utils/auth-confirmation.js';
 const confirmationMessage = consumeConfirmation(window.location, window.history);
 
 // React monta todos nuestros componentes dentro de <div id="root">.
-createRoot(document.getElementById('root')).render(<React.StrictMode><App confirmationMessage={confirmationMessage} /></React.StrictMode>);
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App confirmationMessage={confirmationMessage} />
+  </React.StrictMode>,
+);
