@@ -589,7 +589,7 @@ export const modules = {
     id: 'id_activo',
     read: managers,
     write: ['ADMIN', 'GERENTE'],
-    columns: ['nombre', 'id_sucursal', 'valor', 'fecha_adquisicion', 'vida_util_meses', 'estado'],
+    columns: ['codigo', 'nombre', 'id_sucursal', 'valor', 'fecha_adquisicion', 'vida_util_meses', 'estado'],
     filters: ['id_sucursal', 'estado'],
     fields: [
       codeField,
