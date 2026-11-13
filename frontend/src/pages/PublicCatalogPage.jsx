@@ -57,8 +57,16 @@ export default function PublicCatalogPage({ onNavigate, hasSession }) {
     setCartNotice(product.nombre + ' agregado al carrito.');
     notifyUser(product.nombre + ' agregado al carrito.', 'success');
   }
-  const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({ q: '', id_sucursal: '', categoria: '', page: 1 });
+  const [initialSearch] = useState(() =>
+    (new URLSearchParams(window.location.hash.split('?')[1] || '').get('q') || '').slice(0, 100),
+  );
+  const [search, setSearch] = useState(initialSearch);
+  const [filters, setFilters] = useState({
+    q: initialSearch,
+    id_sucursal: '',
+    categoria: '',
+    page: 1,
+  });
   const [result, setResult] = useState({
     data: [],
     sucursales: [],
@@ -118,6 +126,7 @@ export default function PublicCatalogPage({ onNavigate, hasSession }) {
           <span className="brand-mark">+</span>
           <span>
             Nexo<span className="brand-light">Farma</span>
+            <small>CADENA DE FARMACIAS</small>
           </span>
         </a>
         <button
@@ -149,23 +158,37 @@ export default function PublicCatalogPage({ onNavigate, hasSession }) {
         </button>
       </header>
       <main id="catalog-content" className="store-content" tabIndex={-1}>
+        <div className="store-breadcrumb">
+          <a href="#home">Inicio</a>
+          <span aria-hidden="true">/</span>
+          <span>Catálogo</span>
+        </div>
         <section className="store-hero">
           <div>
-            <span className="eyebrow">Tu farmacia, más cerca</span>
+            <span className="eyebrow">MEDICAMENTOS Y BIENESTAR</span>
             <h1>
-              Encuentra lo que necesitas.
+              Tu salud empieza con
               <br />
-              <em>Consulta antes de visitar.</em>
+              <span>información clara.</span>
             </h1>
             <p>
-              Busca medicamentos y descubre en qué sucursales están disponibles. Acceso libre, sin
-              crear una cuenta.
+              Encuentra tu medicamento, compara precios y consulta existencias por sucursal. Prepara
+              tu pedido sin crear una cuenta.
             </p>
           </div>
-          <div className="store-illustration" aria-hidden="true">
-            <Pill size={72} strokeWidth={1.3} />
-            <span>+</span>
-            <MapPin size={36} />
+          <div className="store-catalog-guide" aria-label="Cómo comprar">
+            <span>
+              <Search size={19} />
+              <span>Busca por nombre o principio activo</span>
+            </span>
+            <span>
+              <MapPin size={19} />
+              <span>Revisa disponibilidad en tu farmacia</span>
+            </span>
+            <span>
+              <ShieldCheck size={19} />
+              <span>Confirma tu pedido y paga al recibir</span>
+            </span>
           </div>
         </section>
         <section className="panel store-filters" aria-label="Filtros del catálogo">
@@ -278,7 +301,11 @@ export default function PublicCatalogPage({ onNavigate, hasSession }) {
                   <p>{product.descripcion || 'Consulta detalles del producto en la sucursal.'}</p>
                   <div className="product-price">
                     <ProductPrice product={product} />
-                    <span>{product.requiere_receta ? 'Requiere receta médica' : 'Sin receta'}</span>
+                    <span
+                      className={`catalog-prescription ${product.requiere_receta ? 'required' : ''}`}
+                    >
+                      {product.requiere_receta ? 'Requiere receta médica' : 'Sin receta'}
+                    </span>
                   </div>
                   <div className={`stock-note ${product.sucursales.length ? 'available' : ''}`}>
                     <span className="badge-dot" />
@@ -340,9 +367,9 @@ export default function PublicCatalogPage({ onNavigate, hasSession }) {
         <div className="store-note">
           <ShieldCheck size={20} />
           <p>
-            La disponibilidad puede cambiar antes de tu visita. Los medicamentos con receta
-            requieren su presentación en la farmacia. Este catálogo permite consultar; todavía no
-            recibe compras por internet.
+            Los precios y las existencias se verifican al confirmar tu pedido. Si un medicamento
+            requiere receta, adjúntala al finalizar la compra para que el personal pueda revisarla.
+            La entrega está sujeta a cobertura y el pago se realiza al recibir.
           </p>
         </div>
         {trackingOpen && (

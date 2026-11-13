@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { testDatabase, asUser, operation } from './database-helper.js';
+import { validateOperation } from '../src/services/operation-validation.js';
+test('call center consulta y crea por departamento, sin coordenadas', async t => {
+ const db=await testDatabase(); t.after(()=>db.close());
+ const branch=(await db.query('select departamento from sucursales where id_sucursal=1')).rows[0];
+ const items=[{id_medicamento:1,cantidad:1}];
+ const data=validateOperation('disponibilidad',{departamento:branch.departamento,items});
+ const candidates=await asUser(db,'callCenter',()=>db.query('select consultar_disponibilidad($1::jsonb) data',[JSON.stringify(data)]));
+ assert.ok(candidates.rows[0].data.length);
+ assert.ok(candidates.rows[0].data.every(c=>c.departamento===branch.departamento && c.distancia_km===null));
+ const none=await asUser(db,'callCenter',()=>db.query('select consultar_disponibilidad($1::jsonb) data',[JSON.stringify({departamento:'Sin sucursales',items})]));
+ assert.deepEqual(none.rows[0].data,[]);
+ const order={...data,id_sucursal:1,id_cliente:1,direccion_entrega:'Entrega de prueba',metodo_pago:'EFECTIVO',canal:'TELEFONO'};
+ validateOperation('pedido',order);
+ const result=await asUser(db,'callCenter',()=>operation(db,'pedido',order));
+ const stored=(await db.query('select departamento,latitud,longitud from pedidos where id_pedido=$1',[result.id_pedido])).rows[0];
+ assert.deepEqual(stored,{departamento:branch.departamento,latitud:null,longitud:null});
+ await assert.rejects(asUser(db,'callCenter',()=>operation(db,'pedido',{...order,departamento:'Otro departamento'})),/departamento/);
+ assert.throws(()=>validateOperation('disponibilidad',{items}),/departamento/);
+});

@@ -20,8 +20,8 @@ const operations = {
   traslado: { required: ['id_sucursal_origen', 'id_sucursal_destino', 'items', 'motivo'],
     fields: { id_sucursal_origen: idField, id_sucursal_destino: idField, items, motivo: reason } },
   recibir_traslado: { required: ['id_traslado'], fields: { id_traslado: idField } },
-  pedido: { required: ['id_sucursal', 'id_cliente', 'items', 'metodo_pago', 'canal', 'direccion_entrega', 'latitud', 'longitud'],
-    fields: { ...saleFields, id_cliente: idField, id_empleado: undefined, ...coordinates, direccion_entrega: reason,
+  pedido: { required: ['id_sucursal', 'id_cliente', 'items', 'metodo_pago', 'canal', 'direccion_entrega'],
+    fields: { ...saleFields, id_cliente: idField, id_empleado: undefined, ...coordinates, departamento: { type: 'text', max: 100 }, direccion_entrega: reason,
       canal: { type: 'enum', values: ['TELEFONO', 'PORTAL', 'SUCURSAL'] } } },
   estado_pedido: { required: ['id_pedido', 'estado'], fields: { id_pedido: idField,
     estado: { type: 'enum', values: ['PREPARANDO', 'EN_CAMINO', 'ENTREGADO', 'CANCELADO', 'DEVUELTO'] }, repartidor: { type: 'text', max: 150 }, motivo: reason } },
@@ -31,13 +31,14 @@ const operations = {
     monto: { ...moneyField, min: 0.01 }, metodo_pago: paymentField } },
   revertir_caja: { required: ['id_movimiento', 'motivo'], fields: { id_movimiento: idField, motivo: reason } },
   planilla: { required: ['id_sucursal', 'periodo'], fields: { id_sucursal: idField, periodo: { type: 'date' }, ajustes: { type: 'array', max: 500 } } },
-  disponibilidad: { required: ['latitud', 'longitud', 'items'], fields: { ...coordinates, items } },
+  disponibilidad: { required: ['items'], fields: { ...coordinates, departamento: { type: 'text', max: 100 }, items } },
 };
 
 export function validateOperation(action, body) {
   const rules = operations[action];
   if (!rules) throw httpError(400, 'Operación desconocida.');
   const clean = validateFields(body, rules.fields, rules.required);
+  if (['pedido', 'disponibilidad'].includes(action) && !clean.departamento && (clean.latitud === undefined || clean.longitud === undefined)) throw httpError(400, 'departamento es obligatorio.');
   if (clean.items) {
     if (!clean.items.length) throw httpError(400, 'Agrega al menos un medicamento.');
     const seen = new Set();

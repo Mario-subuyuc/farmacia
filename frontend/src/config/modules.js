@@ -125,6 +125,7 @@ export const modules = {
     create: false,
     columns: [
       'id_usuario',
+      'email',
       'aprobar_receta',
       'confirmar_pago',
       'aprobar_stock',
@@ -661,7 +662,7 @@ export const modules = {
     id: 'id_usuario',
     read: ['ADMIN'],
     write: ['ADMIN'],
-    columns: ['id_usuario', 'rol', 'id_sucursal', 'activo'],
+    columns: ['id_usuario', 'email', 'rol', 'id_sucursal', 'activo'],
     filters: ['rol', 'id_sucursal'],
     fields: [
       {
@@ -819,6 +820,7 @@ export const labels = {
   id_cliente: 'Cliente',
   id_empleado: 'Empleado',
   id_usuario: 'Cuenta',
+  email: 'Correo electrónico',
   id_inventario: 'Lote de inventario',
   id_venta: 'Venta',
   id_pedido: 'Pedido',

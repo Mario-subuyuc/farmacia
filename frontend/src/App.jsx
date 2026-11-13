@@ -20,7 +20,7 @@ import { Loading, Notice } from './components/Feedback.jsx';
 import { consumeConfirmation } from './utils/auth-confirmation.js';
 
 function currentPage() {
-  return window.location.hash.slice(1) || 'home';
+  return window.location.hash.slice(1).split('?')[0] || 'home';
 }
 
 function AppContent({ confirmationMessage = '' }) {
@@ -59,7 +59,7 @@ function AppContent({ confirmationMessage = '' }) {
   }, []);
   function navigate(name) {
     window.location.hash = name;
-    setPage(name);
+    setPage(name.split('?')[0]);
   }
 
   useEffect(

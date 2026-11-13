@@ -71,3 +71,8 @@ npm run ui:build
 ```
 
 Las pruebas usan PostgreSQL local en memoria (PGlite), un adaptador Supabase simulado y transportes SMTP simulados. No usan Supabase remoto ni envían correos reales. El archivo `tests/enrollment-email-flow.test.js` cubre inscripción, espera antes de responder, confirmación, duplicados, fallos SMTP, errores de cola, tokens inválidos/vencidos, bloqueo compartido, intentos agotados, permisos y URL de producción.
+
+
+### Call center por departamento
+
+La migracion `019_callcenter_departments.sql` permite consultar existencias y crear pedidos internos por departamento sin coordenadas. Completa el departamento de pedidos historicos con el de su sucursal y conserva sus coordenadas. La direccion sigue siendo necesaria al confirmar la entrega. La consulta muestra tiempo de preparacion; la entrega debe coordinarse con la sucursal. El portal conserva su flujo de coordenadas.

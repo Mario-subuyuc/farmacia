@@ -12,9 +12,12 @@ import {
   Plus,
   PackageCheck,
   Pill,
+  Search,
+  Building2,
+  FileCheck2,
+  ChevronRight,
 } from 'lucide-react';
 import { api } from '../services/api.js';
-import { money } from '../utils/format.js';
 import { CART_KEY, readCart } from '../utils/cart.js';
 import { usePublicContent } from '../hooks/usePublicContent.js';
 import ProductPrice from '../components/ProductPrice.jsx';
@@ -39,6 +42,7 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
   const [error, setError] = useState(false);
   const [cart, setCart] = useState(readCart);
   const [modal, setModal] = useState('');
+  const [search, setSearch] = useState('');
   useEffect(() => {
     let active = true;
     api
@@ -67,6 +71,11 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
     } catch {}
   }, [cart]);
   const goCatalog = () => onNavigate('catalogo');
+  function searchCatalog(event) {
+    event.preventDefault();
+    const query = search.trim();
+    onNavigate(query ? `catalogo?q=${encodeURIComponent(query)}` : 'catalogo');
+  }
   const destinations = { 'home-branches': 'farmacia/sucursales', 'home-faq': 'farmacia/ayuda' };
   const scroll = (id) => onNavigate(destinations[id]);
   useEffect(() => {
@@ -82,14 +91,15 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
   return (
     <div className="pharma-home">
       <div className="home-announcement">
-        <Heart size={14} /> Un poco de cuidado hace una gran diferencia.{' '}
-        <span>Estamos cerca de ti.</span>
+        <ShieldCheck size={15} /> Tu red de farmacias en Guatemala
+        <span>Medicamentos y bienestar, cerca de ti</span>
       </div>
       <header className="home-nav">
         <a className="brand" href="#home" aria-label="NexoFarma inicio">
           <span className="brand-mark">+</span>
           <span>
             Nexo<span className="brand-light">Farma</span>
+            <small>CADENA DE FARMACIAS</small>
           </span>
         </a>
         <nav aria-label="Navegación principal">
@@ -102,6 +112,9 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
         </nav>
         <div className="home-nav-actions">
           <span data-experience-tools="" />
+          <button className="home-find-branch" onClick={() => scroll('home-branches')}>
+            <MapPin size={17} /> <span>Encuentra tu farmacia</span>
+          </button>
           <button className="home-track" onClick={() => setModal('tracking')}>
             Seguir mi pedido
           </button>
@@ -127,84 +140,74 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
           <section className="home-hero">
             <div className="home-hero-copy">
               <span className="home-kicker">
-                <span /> TU FARMACIA, MÁS CERCA
+                <Plus size={16} /> SALUD Y CUIDADO EN CADA SUCURSAL
               </span>
               <h1>
-                Cuidarte empieza
+                Tu farmacia,
                 <br />
-                con estar <em>cerca.</em>
+                <span>donde la necesitas.</span>
               </h1>
               <p>
-                Lo que necesitas para tu salud y bienestar, en un solo lugar. Explora medicamentos y
-                productos de cuidado diario, consulta su disponibilidad y elige cómo quieres
-                recibirlos.
+                Medicamentos y productos para tu bienestar. Consulta precios, revisa existencias en
+                nuestras sucursales y prepara tu pedido sin crear una cuenta.
               </p>
-              <p className="home-hero-extra">
-                Prepara tu compra a tu ritmo: revisa precios en quetzales, organiza tu carrito y
-                encuentra una sucursal cerca de ti, sin crear una cuenta.
-              </p>
+              <form className="home-medicine-search" onSubmit={searchCatalog} role="search">
+                <label htmlFor="home-medicine-query">¿Qué medicamento necesitas?</label>
+                <div>
+                  <Search size={21} aria-hidden="true" />
+                  <input
+                    id="home-medicine-query"
+                    type="search"
+                    placeholder="Nombre o principio activo"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    maxLength={100}
+                  />
+                  <button type="submit">
+                    Buscar <ArrowRight size={18} />
+                  </button>
+                </div>
+              </form>
               <div className="home-hero-actions">
-                <button className="home-primary" onClick={goCatalog}>
-                  Explorar productos <ArrowRight size={19} />
+                <button className="home-text-link" onClick={goCatalog}>
+                  Ver todos los medicamentos <ArrowRight size={17} />
                 </button>
-                <button className="home-text-link" onClick={() => scroll('home-branches')}>
-                  Encuentra tu farmacia <ArrowUpRight size={17} />
-                </button>
-              </div>
-              <div className="home-hero-note">
-                <ShieldCheck size={21} />
-                <span>
-                  Compra con tranquilidad.
-                  <br />
-                  <strong>Paga al recibir tu pedido.</strong>
+                <span className="home-search-note">
+                  <ShieldCheck size={16} /> Precios en quetzales
                 </span>
               </div>
             </div>
-            <div className="home-hero-art">
-              <div className="home-orbit" />
-              <div className="home-art-cross" aria-hidden="true">
-                +
+            <div className="home-pharmacy-visual">
+              <img
+                className="home-pharmacy-photo"
+                src="/images/pharmacy-care-hero.jpg"
+                alt="Imagen ilustrativa de atención en una farmacia moderna"
+                width="1536"
+                height="1024"
+                fetchPriority="high"
+              />
+              <div className="home-pharmacy-label">
+                <Plus size={20} /> NexoFarma <span>Salud más cerca</span>
               </div>
-              <div className="home-art-caption">BIENESTAR PARA CADA DÍA</div>
-              <div className="home-product-stage">
-                {catalog.data.slice(0, 3).map((product, index) => (
-                  <div className={`home-stage-product stage-${index}`} key={product.id_medicamento}>
-                    {product.imagen_url ? (
-                      <img src={product.imagen_url} alt={product.nombre} />
-                    ) : (
-                      <Pill size={60} />
-                    )}
-                    <span>{product.nombre}</span>
-                  </div>
-                ))}
-                {!catalog.data.length && (
-                  <div className="home-art-fallback">
-                    <Pill size={90} />
-                    <span>
-                      Salud y bienestar
-                      <br />a tu alcance
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="home-delivery-card">
-                <span>
-                  <Truck size={25} />
+              <button className="home-network-link" onClick={() => scroll('home-branches')}>
+                <span className="home-network-icon">
+                  <Building2 size={25} />
                 </span>
-                <div>
-                  <strong>De tu farmacia a tu puerta</strong>
-                  <p>Entrega según cobertura de tu sucursal</p>
-                </div>
-              </div>
+                <span>
+                  <strong>Una red para cuidar de ti</strong>
+                  <small>Consulta ubicaciones y disponibilidad</small>
+                </span>
+                <ArrowUpRight size={19} />
+              </button>
             </div>
           </section>
         )}
         {page === 'home' && (
           <section className="home-benefits" aria-label="Beneficios">
             {[
+              [FileCheck2, 'Medicamentos con receta', 'Revisión del personal antes de preparar'],
+              [Truck, 'Entrega a domicilio', 'Sujeta a cobertura de tu sucursal'],
               [ShieldCheck, 'Pago al recibir', 'Efectivo, tarjeta o transferencia'],
-              [Truck, 'Entrega a domicilio', 'Consulta la cobertura al pedir'],
-              [PackageCheck, 'Sigue tu pedido', 'Consulta cada etapa con tu código'],
             ].map(([Icon, title, text]) => (
               <div key={title}>
                 <Icon size={27} strokeWidth={1.5} />
@@ -213,6 +216,40 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
                   <small>{text}</small>
                 </span>
               </div>
+            ))}
+          </section>
+        )}
+        {page === 'home' && (
+          <section className="home-pharmacy-shortcuts" aria-label="Servicios de tu farmacia">
+            {[
+              [Pill, 'Consulta medicamentos', 'Precios y existencias por sucursal', goCatalog],
+              [
+                FileCheck2,
+                '¿Tu producto lleva receta?',
+                'Conoce cómo adjuntarla a tu pedido',
+                () => onNavigate('farmacia/ayuda'),
+              ],
+              [
+                MapPin,
+                'Encuentra una sucursal',
+                'Direcciones y teléfonos de contacto',
+                () => scroll('home-branches'),
+              ],
+              [
+                PackageCheck,
+                'Sigue tu pedido',
+                'Consulta el estado con tu código',
+                () => setModal('tracking'),
+              ],
+            ].map(([Icon, title, text, action]) => (
+              <button key={title} onClick={action}>
+                <Icon size={25} />
+                <span>
+                  <strong>{title}</strong>
+                  <small>{text}</small>
+                </span>
+                <ChevronRight size={17} />
+              </button>
             ))}
           </section>
         )}
@@ -424,17 +461,16 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
           <section className="home-section home-products">
             <div className="home-section-heading">
               <div>
-                <span className="home-kicker">EXPLORA EL CATÁLOGO</span>
-                <h2>Un cuidado para cada necesidad.</h2>
+                <span className="home-kicker">MEDICAMENTOS Y BIENESTAR</span>
+                <h2>Consulta nuestro catálogo</h2>
               </div>
               <button className="home-text-link" onClick={goCatalog}>
                 Ver todos los productos <ArrowRight size={18} />
               </button>
             </div>
             <p className="home-section-intro">
-              Empieza por estos productos o entra al catálogo completo. Allí puedes buscar por
-              principio activo, filtrar por categoría y elegir una sucursal para ver qué productos
-              están disponibles.
+              Información de cada producto, precios y sucursales con existencias. La disponibilidad
+              se confirma al finalizar tu pedido.
             </p>
             {catalog.data.length ? (
               <div className="home-featured-grid">
@@ -764,19 +800,15 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
         {page === 'home' && (
           <section className="home-final">
             <div>
-              <span className="home-kicker">NOS ALEGRA ACOMPAÑARTE</span>
-              <h2>
-                Un buen día empieza
-                <br />
-                por cuidarte.
-              </h2>
+              <span className="home-kicker">NUESTRA RED DE FARMACIAS</span>
+              <h2>Encuentra tu farmacia NexoFarma</h2>
               <p>
-                Encuentra tus productos, prepara tu pedido y elige la sucursal que te acompañará en
-                cada paso.
+                Consulta direcciones y teléfonos. Cada sucursal tiene su propia disponibilidad para
+                atender tu compra.
               </p>
             </div>
-            <button className="home-primary" onClick={goCatalog}>
-              Encuentra lo que necesitas <ArrowRight size={19} />
+            <button className="home-primary" onClick={() => scroll('home-branches')}>
+              Ver sucursales <MapPin size={19} />
             </button>
             <Plus className="home-final-plus" size={160} strokeWidth={0.7} aria-hidden="true" />
           </section>

@@ -11,7 +11,7 @@ export const resources = {
  'solicitudes-stock':{table:'solicitudes_stock',id:'id_solicitud',read:['ADMIN','GERENTE','BODEGA','AUDITOR'],filters:['id_sucursal','estado','tipo']},
  'devoluciones-clientes':{table:'devoluciones_clientes',id:'id_devolucion',read:['ADMIN','GERENTE','AUDITOR'],filters:['id_sucursal']},
  'cierres-caja':{table:'cierres_caja',id:'id_cierre',read:['ADMIN','GERENTE','CAJERO','AUDITOR'],filters:['id_sucursal']},
- 'permisos-operativos':{table:'permisos_operativos',id:'id_usuario',uuid:true,create:false,read:['ADMIN'],write:['ADMIN'],filters:[],required:[],fields:{aprobar_receta:{type:'boolean'},confirmar_pago:{type:'boolean'},aprobar_stock:{type:'boolean'},modificar_precio:{type:'boolean'}}},
+ 'permisos-operativos':{readTable:'autorizaciones_personal',table:'permisos_operativos',id:'id_usuario',uuid:true,create:false,read:['ADMIN'],write:['ADMIN'],filters:[],required:[],fields:{aprobar_receta:{type:'boolean'},confirmar_pago:{type:'boolean'},aprobar_stock:{type:'boolean'},modificar_precio:{type:'boolean'}}},
  'plantillas-correo':{create:false,table:'plantillas_correo',id:'id_plantilla',read:['ADMIN'],write:['ADMIN'],required:['tipo'],filters:['tipo'],fields:{marca:{type:'text',max:80},lema:{type:'text',max:150},color_principal:{type:'color'},color_fondo:{type:'color'},color_alerta:{type:'color'},introduccion:{type:'text',max:500,nullable:true},pie:{type:'text',max:500},fuente:{type:'enum',values:['Arial','Georgia']}}},
  inscripciones:{table:'inscripciones',id:'id_inscripcion',read:['ADMIN'],filters:['id_evento','estado']},
  proveedores:{table:'proveedores',id:'id_proveedor',read:['ADMIN','GERENTE','BODEGA','AUDITOR'],write:['ADMIN'],required:['nombre'],filters:['activo'],fields:{nombre:{type:'text',max:150},contacto:{type:'text',max:150,nullable:true},email:{type:'text',max:150,nullable:true},telefono:{type:'text',max:30,nullable:true},direccion:{type:'text',max:255,nullable:true},activo:{type:'boolean'}}},
@@ -77,6 +77,7 @@ export const resources = {
     filters: ['id_sucursal', 'id_medicamento'],
   },
   perfiles: {
+    readTable: 'cuentas_personal',
     table: 'perfiles', id: 'id_usuario', uuid: true, read: ['ADMIN'], write: ['ADMIN'],
     required: ['id_usuario', 'rol'],
     fields: { id_usuario: { type: 'uuid' }, rol: { type: 'enum', values: everyone },

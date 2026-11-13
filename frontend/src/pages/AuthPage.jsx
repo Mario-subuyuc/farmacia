@@ -48,19 +48,20 @@ export default function AuthPage({
           <span className="brand-mark">+</span>
           <span>
             Nexo<span className="brand-light">Farma</span>
+            <small>GESTIÓN DE FARMACIAS</small>
           </span>
         </a>
         <div className="auth-story-content">
           <span className="story-tag">
             <span />
-            Una red. Un mismo cuidado.
+            UN PORTAL PARA TODA TU RED
           </span>
           <h1>
-            Más cerca de
+            Tu red de farmacias,
             <br />
-            cada sucursal.
+            en un solo lugar.
             <br />
-            <em>Más cerca de todos.</em>
+            <em>Conectada contigo.</em>
           </h1>
           <p>
             Inventario, equipo y entregas conectados para que cada medicamento llegue donde hace

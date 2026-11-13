@@ -10,7 +10,7 @@ import { newOperation } from '../config/operations.js';
 import { can, inBranch } from '../config/modules.js';
 
 export default function CallCenterPage({ client, profile, references, branch }) {
-  const [coordinates, setCoordinates] = useState({ latitud: '', longitud: '' });
+  const [departamento, setDepartamento] = useState('');
   const [items, setItems] = useState([{ id_medicamento: '', cantidad: 1 }]);
   const [candidates, setCandidates] = useState(null);
   const [searched, setSearched] = useState(null);
@@ -18,8 +18,8 @@ export default function CallCenterPage({ client, profile, references, branch }) 
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [operation, setOperation] = useState(null);
-  function changedCoordinates(name, value) {
-    setCoordinates((old) => ({ ...old, [name]: value }));
+  function changedDepartment(name, value) {
+    setDepartamento(value);
     setCandidates(null);
   }
   async function search(event) {
@@ -30,8 +30,7 @@ export default function CallCenterPage({ client, profile, references, branch }) 
     setCandidates(null);
     try {
       const body = {
-        latitud: Number(coordinates.latitud),
-        longitud: Number(coordinates.longitud),
+        departamento,
         items: parseItems(items),
       };
       const result = await client.write('POST', '/disponibilidad', body);
@@ -67,26 +66,10 @@ export default function CallCenterPage({ client, profile, references, branch }) 
       <div className="callcenter-layout">
         <section className="panel form-panel">
           <h2>¿Dónde entregamos?</h2>
-          <p className="muted">Ingresa la ubicación del cliente y los medicamentos solicitados.</p>
+          <p className="muted">Ingresa el departamento del cliente y los medicamentos solicitados.</p>
           <form onSubmit={search}>
             <div className="form-grid">
-              {['latitud', 'longitud'].map((name) => (
-                <Field
-                  key={name}
-                  field={{
-                    name,
-                    label: name === 'latitud' ? 'Latitud' : 'Longitud',
-                    type: 'number',
-                    min: name === 'latitud' ? -90 : -180,
-                    max: name === 'latitud' ? 90 : 180,
-                    step: 'any',
-                    required: true,
-                  }}
-                  value={coordinates[name]}
-                  onChange={changedCoordinates}
-                  disabled={busy}
-                />
-              ))}
+              <Field field={{ name: 'departamento', label: 'Departamento', required: true, maxLength: 100 }} value={departamento} onChange={changedDepartment} disabled={busy} />
             </div>
             <ItemsEditor
               rows={items}
@@ -106,8 +89,7 @@ export default function CallCenterPage({ client, profile, references, branch }) 
             </button>
           </form>
           <p className="fine-print">
-            Consultar no reserva stock. Al crear el pedido se valida nuevamente. El tiempo estimado
-            usa cobertura y velocidad de la sucursal.
+            Consultar no reserva stock. Al crear el pedido se valida nuevamente. La cobertura se consulta por departamento. La entrega se coordina con la sucursal.
           </p>
         </section>
         <section>
@@ -119,14 +101,14 @@ export default function CallCenterPage({ client, profile, references, branch }) 
             <div className="panel">
               <Empty
                 title="La mejor opción empieza aquí"
-                description="Completa la consulta para ver disponibilidad, precio y tiempo estimado."
+                description="Completa la consulta para ver disponibilidad, precio por departamento."
               />
             </div>
           ) : !candidates.length ? (
             <div className="panel">
               <Empty
                 title="Sin cobertura para este pedido"
-                description="Ninguna sucursal tiene todos los medicamentos disponibles dentro de su radio de entrega."
+                description="Ninguna sucursal tiene todos los medicamentos disponibles en el departamento indicado."
               />
             </div>
           ) : (
@@ -134,7 +116,7 @@ export default function CallCenterPage({ client, profile, references, branch }) 
               {candidates.map((candidate, index) => (
                 <article className="candidate-card" key={candidate.id_sucursal}>
                   {index === 0 && (
-                    <span className="candidate-recommendation">Menor tiempo estimado</span>
+                    <span className="candidate-recommendation">Sucursal disponible</span>
                   )}
                   <h3>{candidate.nombre}</h3>
                   <p>
@@ -144,8 +126,8 @@ export default function CallCenterPage({ client, profile, references, branch }) 
                   <div className="candidate-stats">
                     <span>
                       <Clock3 size={18} />
-                      <strong>{candidate.tiempo_estimado_minutos} min</strong>
-                      <small>Tiempo estimado</small>
+                      <strong>{candidate.preparacion_minutos} min</strong>
+                      <small>Preparación; entrega por confirmar</small>
                     </span>
                     <span>
                       <strong>{money(candidate.total)}</strong>

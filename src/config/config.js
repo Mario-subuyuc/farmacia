@@ -5,7 +5,7 @@ export const PORT = Number(process.env.PORT || 3000);
 
 export const SUPABASE_URL = process.env.SUPABASE_URL;
 export const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
-export const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173')
+export const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
   .split(',').map(function (origin) { return origin.trim(); });
 
 // Si falta la configuración, detenemos el inicio con un mensaje claro.

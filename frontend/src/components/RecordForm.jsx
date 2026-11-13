@@ -46,7 +46,7 @@ export default function RecordForm({
     try {
       const body = formPayload(fields, values, Boolean(record));
       if (
-        module.id === 'id_usuario' &&
+        module.path === 'perfiles' &&
         !['ADMIN', 'AUDITOR', 'CALL_CENTER'].includes(body.rol) &&
         !body.id_sucursal
       )

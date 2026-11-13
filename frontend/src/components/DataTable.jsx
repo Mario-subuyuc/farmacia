@@ -89,6 +89,7 @@ export function Status({ value }) {
 }
 
 export function displayValue(field, value, references = {}, row = {}) {
+  if (field === 'id_usuario' && row.nombre) return row.nombre;
   if (field === 'disponible' && row.cantidad !== undefined) {
     const medicine = references.medicamentos?.find(
       (m) => Number(m.id_medicamento) === Number(row.id_medicamento),

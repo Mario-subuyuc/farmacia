@@ -1,6 +1,6 @@
 import { normalize } from '../utils/table-export.js';
-import { useEffect, useState } from 'react';
-import { LogOut, Menu, X, MapPin } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { LogOut, Menu, X, MapPin, ChevronDown } from 'lucide-react';
 import Icon from './Icon.jsx';
 import { modules, can } from '../config/modules.js';
 import { words } from '../utils/format.js';
@@ -18,6 +18,9 @@ export default function Layout({
 }) {
   const [open, setOpen] = useState(false);
   const [menuSearch, setMenuSearch] = useState('');
+  const [expandedGroup, setExpandedGroup] = useState(null);
+  const [hoveredGroup, setHoveredGroup] = useState(null);
+  const navigationRef = useRef(null);
   const specialNames = {
     inicio: 'Inicio',
     'call-center': 'Call center',
@@ -70,6 +73,23 @@ export default function Layout({
     };
   }, [open]);
   const currentTitle = modules[page]?.title || specialNames[page] || 'Panel';
+  const currentGroup = modules[page]?.group || {
+    inicio: 'Resumen',
+    'call-center': 'Atención al cliente',
+    'operaciones-farmacia': 'Operación',
+    'diseno-correo': 'Administración',
+    reportes: 'Finanzas',
+  }[page] || 'Panel';
+  useEffect(() => {
+    const navigation = navigationRef.current;
+    const active = navigation?.querySelector('[aria-current="page"]');
+    if (!active || menuSearch || !active.getClientRects().length) return;
+    const bounds = navigation.getBoundingClientRect();
+    const item = active.getBoundingClientRect();
+    if (item.top < bounds.top || item.bottom > bounds.bottom) {
+      navigation.scrollTop += item.top - bounds.top - (bounds.height - item.height) / 2;
+    }
+  }, [page, open, menuSearch]);
   useEffect(() => {
     document.title = currentTitle + ' | NexoFarma';
     window.scrollTo(0, 0);
@@ -80,6 +100,8 @@ export default function Layout({
     onNavigate(name);
     setOpen(false);
     setMenuSearch('');
+    setExpandedGroup(null);
+    setHoveredGroup(null);
   }
   const groups = ['Operación', 'Finanzas', 'Administración', 'Control'];
   return (
@@ -118,6 +140,11 @@ export default function Layout({
             <X size={20} />
           </button>
         </div>
+        <div className="sidebar-location" aria-label="Ubicación actual">
+          <span className="sidebar-location-label">Estás en</span>
+          <strong>{currentTitle}</strong>
+          <span className="sidebar-location-group">{currentGroup}</span>
+        </div>
         <div className="navigation-search">
           <label>
             <span>Buscar módulo</span>
@@ -129,7 +156,7 @@ export default function Layout({
             />
           </label>
         </div>
-        <nav className="navigation" aria-label="Módulos de farmacia">
+        <nav ref={navigationRef} className="navigation" aria-label="Módulos de farmacia">
           <button
             hidden={!matches('Inicio')}
             className={`nav-link ${page === 'inicio' ? 'active' : ''}`}
@@ -193,9 +220,51 @@ export default function Layout({
               )
             )
               return null;
+            const expanded = Boolean(menuSearch) || expandedGroup === group || hoveredGroup === group;
+            const groupId = `navigation-group-${groups.indexOf(group)}`;
             return (
-              <div className="nav-group" key={group}>
-                <p>{group}</p>
+              <div
+                className={`nav-group compact-nav-group ${currentGroup === group ? 'is-current' : ''}`}
+                key={group}
+                onMouseEnter={() => {
+                  if (window.matchMedia('(hover: hover)').matches) {
+                    setHoveredGroup(group);
+                    setExpandedGroup(null);
+                  }
+                }}
+                onMouseLeave={() => {
+                  if (!navigationRef.current?.querySelector(`#${groupId}`)?.contains(document.activeElement))
+                    setHoveredGroup(null);
+                }}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setExpandedGroup(null);
+                    setHoveredGroup(null);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    event.stopPropagation();
+                    setExpandedGroup(null);
+                    setHoveredGroup(null);
+                    event.currentTarget.querySelector('.nav-category').focus();
+                  }
+                }}
+              >
+                <button
+                  className="nav-category"
+                  aria-expanded={expanded}
+                  aria-controls={groupId}
+                  onClick={() => {
+                    setHoveredGroup(null);
+                    setExpandedGroup(expandedGroup === group ? null : group);
+                  }}
+                >
+                  <Icon name={{ 'Operación': 'Package', Finanzas: 'Wallet', 'Administración': 'ShieldCheck', Control: 'ClipboardCheck' }[group]} />
+                  <span>{group}</span>
+                  <ChevronDown className="category-chevron" size={16} />
+                </button>
+                <div id={groupId} className="nav-subcategories" hidden={!expanded}>
                 {entries.map(([name, config]) => (
                   <button
                     key={name}
@@ -219,6 +288,7 @@ export default function Layout({
                       <span>Reportes</span>
                     </button>
                   )}
+                </div>
               </div>
             );
           })}
@@ -227,13 +297,6 @@ export default function Layout({
           <button className="button subtle small" onClick={() => navigate('catalogo')}>
             Ver catálogo público
           </button>
-          <div className="sidebar-help">
-            <span className="little-plus">+</span>
-            <div>
-              <strong>Todo empieza aquí</strong>
-              <p>Una red mejor coordinada.</p>
-            </div>
-          </div>
           <button className="nav-link logout" onClick={onLogout}>
             <LogOut size={18} />
             <span>Salir de esta pestaña</span>

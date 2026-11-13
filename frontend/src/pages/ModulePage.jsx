@@ -61,7 +61,7 @@ export default function ModulePage({
         {((canWrite && module.create !== false) || createOperation) && (
           <button
             className="button primary"
-            disabled={!references.medicamentos}
+            disabled={!canWrite && !references.medicamentos}
             onClick={() =>
               setModal(
                 canWrite ? { type: 'record' } : { type: 'operation', operation: createOperation },
@@ -75,6 +75,29 @@ export default function ModulePage({
       </div>
       <Notice success>{notice}</Notice>
       <Notice>{state.error}</Notice>
+      {name === 'inventario' && (
+        <section className="panel">
+          <h2>¿El medicamento todavía no existe?</h2>
+          <p>
+            Primero registra el medicamento en el catálogo y después registra una entrada
+            para agregar sus existencias a la sucursal.
+          </p>
+          {can(profile, modules.medicamentos.write) ? (
+            <button
+              className="button secondary"
+              onClick={() => setModal({ type: 'medicine' })}
+            >
+              <Plus size={18} />
+              Crear medicamento
+            </button>
+          ) : (
+            <p className="muted">Solicita a un administrador que registre el nuevo medicamento.</p>
+          )}
+        </section>
+      )}
+      {name === 'medicamentos' && !canWrite && (
+        <Notice>Solo un administrador puede crear o editar medicamentos del catálogo.</Notice>
+      )}
       <section className="panel">
         <div className="table-toolbar">
           <div>
@@ -217,9 +240,9 @@ export default function ModulePage({
           onSaved={saved}
         />
       )}
-      {modal?.type === 'record' && (
+      {['record', 'medicine'].includes(modal?.type) && (
         <RecordForm
-          module={module}
+          module={modal.type === 'medicine' ? { ...modules.medicamentos, path: 'medicamentos' } : module}
           record={modal.row}
           client={client}
           references={references}

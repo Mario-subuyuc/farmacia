@@ -1,0 +1,36 @@
+import { test, expect } from '@playwright/test';
+
+test('categorías compactas funcionan con cursor, teclado, búsqueda y móvil', async ({ page }) => {
+  await page.goto('/#login');
+  await page.getByLabel('Correo electrónico').fill('admin@example.com');
+  await page.getByLabel('Contraseña', { exact: true }).fill('test-password');
+  await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
+  const nav = page.getByRole('navigation', { name: 'Módulos de farmacia' });
+  const operation = nav.getByRole('button', { name: 'Operación', exact: true });
+  const inventory = nav.getByRole('button', { name: 'Inventario', exact: true });
+  await expect(operation).toHaveAttribute('aria-expanded', 'false');
+  await expect(inventory).toBeHidden();
+  await operation.hover();
+  await expect(inventory).toBeVisible();
+  await inventory.click();
+  await expect(page.locator('.sidebar-location')).toContainText('Inventario');
+  await page.locator('#main-content').hover();
+  await expect(inventory).toBeHidden();
+  await operation.focus();
+  await page.keyboard.press('Enter');
+  await expect(inventory).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(inventory).toBeHidden();
+  await expect(operation).toBeFocused();
+  await page.getByLabel('Buscar módulo').fill('inventario');
+  await expect(inventory).toBeVisible();
+  await page.getByLabel('Buscar módulo').fill('');
+  await expect(inventory).toBeHidden();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Abrir menú', exact: true }).click();
+  await operation.click();
+  await expect(inventory).toBeVisible();
+  await inventory.click();
+  await expect(page.locator('.sidebar')).not.toHaveClass(/is-open/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+});
