@@ -6,7 +6,7 @@ import { seedAdministrator } from '../scripts/seed-admin.js';
 test('seeder del administrador usa SQL real y Auth simulado', async t => {
   const db = await testDatabase();
   t.after(() => db.close());
-  await db.exec('alter table auth.users add column email text');
+  // testDatabase ya incluye email en auth.users, como Supabase Auth.
   // Datos ficticios: estas pruebas no leen tu contraseña ni crean cuentas remotas.
   const config = { ADMIN_SEED_EMAIL: ' Seed@Example.com ', ADMIN_SEED_PASSWORD: 'Secret-test-123', ADMIN_SEED_NAME: 'Mario' };
   let calls = 0;

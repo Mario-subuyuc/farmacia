@@ -14,6 +14,8 @@ export const accounts = {
 export async function testDatabase() {
   const db = new PGlite();
   // Supabase instala estos roles y auth.uid(). En tests locales los reproducimos.
+  // Auth también proporciona id, email y raw_user_meta_data; los tests reutilizan
+  // esta tabla mínima sin agregar de nuevo sus columnas ni modificar producción.
   await db.exec(`
     create role anon nologin;
     create role authenticated nologin;
