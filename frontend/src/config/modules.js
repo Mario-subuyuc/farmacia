@@ -475,6 +475,7 @@ export const modules = {
     read: allRoles,
     write: ['ADMIN'],
     columns: [
+      'codigo',
       'nombre',
       'categoria',
       'principio_activo',
