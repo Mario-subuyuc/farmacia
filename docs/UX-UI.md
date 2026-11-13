@@ -1,4 +1,22 @@
-﻿# Guía de interfaz y experiencia de usuario
+# Guía de interfaz y experiencia de usuario
+
+Actualizada el 13 de noviembre de 2026. Véase [Estado actual del portal](ESTADO-ACTUAL.md).
+
+## Componentes actuales
+
+- Paleta azul, blanco y verde azulado en portada, catálogo, login, páginas públicas y personal. `frontend/src/theme.css` se importa después de los estilos base.
+- Aside con categorías por clic, toque o teclado: pasar el cursor no despliega opciones. La búsqueda abre coincidencias. Se retiró la tarjeta «Estás en…»; permanecen título, contexto y categoría actual.
+- Inventario distingue filas vencidas en rojo, próximas a vencer en treinta días en ámbar y sin unidades disponibles en azul, con etiquetas textuales. Vencido tiene prioridad visual cuando coinciden condiciones.
+- Inventario y Operaciones de farmacia usan tarjetas informativas azules, con icono y espacios adaptados a móvil. Crear medicamentos está reservado a administradores.
+- Accesos y permisos y Autorizaciones específicas muestran usuario y correo. Auditoría presenta Usuario y usa Sistema para acciones sin actor.
+- Empleados permite vincular una cuenta e ingresar salario base manualmente; crear una cuenta no genera ficha laboral ni planilla.
+- Los medicamentos no llevan sufijo de sucursal en el nombre: el producto compartido muestra disponibilidad en varias sucursales y los lotes mantienen nomenclatura local.
+- Diseño de correos cambia el ejemplo según General, Alertas, Pedidos o Eventos y aplica el fondo al correo completo. Guardar no envía mensajes.
+- El servidor bloquea inscripciones de eventos iniciados, aunque el formulario todavía puede verse en eventos pasados; falta el aviso visual de «Inscripciones cerradas».
+
+## Avisos de pedidos
+
+`OrderAlertNotice` consulta pedidos PENDIENTES al abrir el panel, cada treinta segundos y al recuperar el foco. Respeta roles y filtro de sucursal, mantiene un banner y registra novedades en Avisos. No sustituye SMTP ni notifica con el navegador cerrado. El sonido depende de la preferencia del usuario.
 
 ## Alcance y criterio
 

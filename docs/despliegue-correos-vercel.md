@@ -1,5 +1,7 @@
 # Inscripciones y correo en Vercel
 
+Referencia revisada el 13/11/2026. Este procedimiento describe la entrega HTTP de inscripciones introducida en la migración 018; el esquema actual llega a la 026. Para el conjunto de cambios posterior, consultar [Estado actual](ESTADO-ACTUAL.md) y [Operación](OPERACION.md). No volver a aplicar 018 si ya figura en privado.migraciones; tampoco ejecutar el seeder DEMO en la base configurada.
+
 ## Qué cambió
 
 La inscripción y la confirmación esperan el procesamiento SMTP antes de responder. Cada solicitud reclama como máximo un correo de su propio token y etapa, mediante `tomar_correo_inscripcion`. No procesa pedidos, alertas ni recordatorios de otras personas. `src/app.js` conserva las rutas POST y el límite de solicitudes existente; Express 5 espera los controladores asíncronos y deriva sus errores al middleware.

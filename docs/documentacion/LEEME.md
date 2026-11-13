@@ -1,4 +1,8 @@
-﻿# Documentación del proyecto NexoFarma
+# Documentación del proyecto NexoFarma
+
+## Referencia vigente al 13 de noviembre de 2026
+
+La referencia operativa actual es [Estado actual del portal](../ESTADO-ACTUAL.md), junto con [la actualización del expediente](ACTUALIZACION-2026-11-13.md). El Word integral, PDF, ZIP, metadatos y diagramas que se describen abajo son entregas históricas con corte al 18/10/2026: **no se han regenerado en esta revisión**. El texto fuente del expediente señala esta distinción para no presentar su diccionario anterior como el esquema vigente.
 
 El archivo principal es **NexoFarma_Documentacion_Integral_RUP.docx**. Integra las entregas solicitadas y la referencia técnica del proyecto. El índice y las páginas se actualizaron mediante Microsoft Word durante la revisión.
 

@@ -1,4 +1,6 @@
-﻿# Backend de una cadena de farmacias
+# Backend de una cadena de farmacias
+
+> Referencia revisada el **13 de noviembre de 2026**: [estado actual y datos registrados](docs/ESTADO-ACTUAL.md), [operación](docs/OPERACION.md) y [UX/UI](docs/UX-UI.md). Esquema hasta la migración 026. Los ejemplos DEMO y las instrucciones de seeding de este README son para entornos aislados; no ejecutar `db:seed` en la base ya configurada. Las cargas actuales están en `database/data/`.
 
 API en **Node, Express, MVC y Supabase (PostgreSQL + Auth)** y aplicación interna en **React + Vite**, dentro de `frontend/`. Usa Node 22.12 o superior para ambos. El código usa funciones, objetos y comentarios en español; no usa clases ni un ORM.
 
@@ -444,13 +446,12 @@ Primero consulta `POST /disponibilidad`:
 
 ```json
 {
-  "latitud": 14.6407,
-  "longitud": -90.5133,
+  "departamento": "Guatemala",
   "items": [{ "id_medicamento": 1, "cantidad": 2 }]
 }
 ```
 
-Devuelve candidatas ordenadas por tiempo estimado, con distancia, disponibilidad, precio, total, requisito de receta y medios de pago. Una lista vacía significa que ninguna sucursal puede entregar el pedido completo en su radio de cobertura. La consulta no reserva: al crear el pedido se vuelve a comprobar el stock con bloqueos.
+Devuelve candidatas del departamento con disponibilidad, precio, total y requisito de receta. La consulta no reserva: al crear el pedido se vuelve a comprobar el stock. Sin coordenadas no se calcula una distancia precisa; se coordina la entrega con la sucursal. La API mantiene compatibilidad con consultas anteriores por coordenadas, pero la pantalla actual usa departamento.
 
 Después crea `POST /pedidos`:
 
@@ -458,8 +459,7 @@ Después crea `POST /pedidos`:
 {
   "id_cliente": 1,
   "id_sucursal": 1,
-  "latitud": 14.6407,
-  "longitud": -90.5133,
+  "departamento": "Guatemala",
   "direccion_entrega": "Dirección del cliente, zona 1",
   "metodo_pago": "EFECTIVO",
   "canal": "TELEFONO",
@@ -492,7 +492,7 @@ Ejemplos de `PATCH /pedidos/ID/estado`, cada uno con una nueva clave de idempote
 
 Solo al entregar se descuentan las reservas, se crea la venta y se registra el ingreso. Para este flujo el pago se considera confirmado al marcar ENTREGADO. No marca el pedido automáticamente como entregado por el paso del tiempo.
 
-Si el cliente cancela antes del despacho: `{ "estado": "CANCELADO", "motivo": "Cliente canceló" }`. Si una entrega falla, marca DEVUELTO **cuando los productos hayan regresado a la sucursal**, con motivo obligatorio. Libera reservas sin generar una venta. Un lote vencido no puede entregarse. Las devoluciones de productos ya vendidos/entregados y los reembolsos parciales necesitan un módulo adicional.
+Si el cliente cancela antes del despacho: `{ "estado": "CANCELADO", "motivo": "Cliente canceló" }`. Si una entrega falla, marca DEVUELTO **cuando los productos hayan regresado a la sucursal**, con motivo obligatorio. Libera reservas sin generar una venta. Un lote vencido no puede entregarse. Las devoluciones parciales de clientes se gestionan en Operaciones de farmacia, con referencia a la venta y reembolso limitado a lo vendido.
 
 `cantidad` es el stock registrado de la sucursal, incluidas unidades reservadas para reparto; `reservado` indica unidades comprometidas. Disponible = cantidad - reservado, excluyendo vencidos. Los pedidos EN_CAMINO permiten identificar qué reservas están en reparto. Las reservas se mantienen hasta entrega, cancelación o retorno; el operador debe gestionar los atrasos.
 
@@ -641,7 +641,7 @@ El botón Carrito permite ajustar cantidades (1 a 99), eliminar productos, vacia
 
 ### Pedidos desde el carrito y seguimiento
 
-El carrito incluye animación al agregar productos y **Continuar con el pago**. El cliente introduce nombre, apellido, teléfono, dirección y coordenadas (manuales o mediante el botón de ubicación); selecciona una sucursal con sus productos y elige efectivo, tarjeta o transferencia **al recibir**. No existe una pasarela ni se solicitan datos bancarios. Los precios se calculan en PostgreSQL, se valida cobertura y stock y se reserva inventario en la misma transacción que crea cliente y pedido. Los medicamentos con receta requieren validación presencial del personal y no se confirman desde el portal.
+El carrito incluye animación al agregar productos y **Continuar con el pago**. El cliente introduce nombre, apellido, teléfono, dirección y coordenadas (manuales o mediante el botón de ubicación); selecciona una sucursal con sus productos y elige efectivo, tarjeta o transferencia **al recibir**. No existe una pasarela ni se solicitan datos bancarios. Los precios se calculan en PostgreSQL, se valida cobertura y stock y se reserva inventario en la misma transacción que crea cliente y pedido. Los medicamentos con receta requieren una imagen en Storage privado y aprobación del personal autorizado antes de preparar el pedido.
 
 La migración `007_portal_orders.sql` incorpora operaciones RPC exclusivas de `service_role`. La API usa la clave privada existente solo en el backend, valida campos y aplica límites de solicitudes. Rutas públicas: `POST /api/tienda/pedidos` y `POST /api/tienda/seguimiento`. Los reintentos con la misma clave y datos devuelven el mismo pedido. La base conserva el hash SHA-256 del código privado de seguimiento; el código original se guarda en el navegador del cliente. No aparece en la URL ni se devuelve información de domicilio o teléfono personal en seguimiento.
 

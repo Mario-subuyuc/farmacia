@@ -1,5 +1,7 @@
 # NexoFarma — Documentación integral RUP
 
+> Actualización del 13/11/2026: consultar [el complemento vigente](ACTUALIZACION-2026-11-13.md) y [Estado actual](../ESTADO-ACTUAL.md). El cuerpo, diccionario y diagramas siguientes corresponden al corte histórico del 18/10/2026; los Word/PDF asociados no se han regenerado.
+
 Versión 1.0 · 18 de octubre de 2026
 
 

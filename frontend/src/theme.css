@@ -654,6 +654,53 @@ tbody tr:hover {
 .swal2-popup {
   color: #18384b;
 }
+.inventory-catalog-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 22px;
+  border: 1px solid #cbdfe9;
+  border-radius: 12px;
+  background: #edf6fa;
+  color: var(--brand-ink);
+}
+.inventory-catalog-hint-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #cbdfe9;
+  border-radius: 11px;
+  background: #fff;
+  color: #17617e;
+}
+.inventory-catalog-hint-copy { flex: 1; min-width: 0; }
+.inventory-catalog-hint h2 { margin: 0 0 7px; font-size: 15px; line-height: 1.4; }
+.inventory-catalog-hint p { margin: 0; color: #456579; font-size: 12px; line-height: 1.7; }
+.inventory-catalog-hint .inventory-catalog-hint-note { margin-top: 7px; font-weight: 600; }
+.inventory-catalog-hint > .button { flex-shrink: 0; align-self: center; }
+.pharmacy-operation-card { padding: 24px; }
+.pharmacy-operation-selector {
+  display: grid;
+  gap: 9px;
+  max-width: 440px;
+  color: var(--brand-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pharmacy-operation-hint { margin: 22px 0 26px; }
+.pharmacy-operation-card .checkout-fieldset > .page-stack { margin-top: 22px; }
+@media (max-width: 600px) {
+  .pharmacy-operation-card { padding: 16px; }
+  .pharmacy-operation-selector { max-width: none; }
+  .pharmacy-operation-hint { margin: 18px 0 22px; }
+}
+@media (max-width: 600px) {
+  .inventory-catalog-hint { flex-wrap: wrap; padding: 16px; gap: 12px; }
+  .inventory-catalog-hint-copy { flex-basis: calc(100% - 52px); }
+  .inventory-catalog-hint > .button { width: 100%; }
+}
 tbody tr.inventory-expired,
 tbody tr.inventory-expired:hover {
   background: #fff0f0;

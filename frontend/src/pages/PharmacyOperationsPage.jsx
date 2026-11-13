@@ -1,5 +1,6 @@
 ﻿import { confirmAction } from '../services/user-feedback.js';
 import { useEffect, useRef, useState } from 'react';
+import { Info } from 'lucide-react';
 import Field from '../components/Field.jsx';
 import { Notice } from '../components/Feedback.jsx';
 import { formPayload } from '../utils/forms.js';
@@ -317,8 +318,8 @@ export default function PharmacyOperationsPage({ client, profile, references, br
       </div>
       <Notice success>{message}</Notice>
       <Notice>{error}</Notice>
-      <section className="panel" style={{ padding: 24 }}>
-        <label>
+      <section className="panel pharmacy-operation-card">
+        <label className="pharmacy-operation-selector">
           ¿Qué deseas registrar?
           <select value={action} onChange={(e) => setAction(e.target.value)}>
             {available.map(([key, item]) => (
@@ -328,8 +329,13 @@ export default function PharmacyOperationsPage({ client, profile, references, br
             ))}
           </select>
         </label>
-        <h2>{config.title}</h2>
-        <p>{config.help}</p>
+        <div className="inventory-catalog-hint pharmacy-operation-hint">
+          <span className="inventory-catalog-hint-icon" aria-hidden="true"><Info size={21} /></span>
+          <div className="inventory-catalog-hint-copy">
+            <h2>{config.title}</h2>
+            <p>{config.help}</p>
+          </div>
+        </div>
         <form onSubmit={submit}>
           <fieldset disabled={busy} className="checkout-fieldset">
             <div className="form-grid">

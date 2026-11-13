@@ -1,5 +1,7 @@
 # Limpieza de datos operativos
 
+Registro histórico: después de esta limpieza se cargaron los datos iniciales actuales. Para consultar cantidades y funcionamiento vigentes, véase [Estado actual del portal](ESTADO-ACTUAL.md).
+
 El 13 de noviembre de 2026 se vaciaron 32 tablas operativas (242 registros) de la base conectada. Se conservaron las tres cuentas y sus credenciales, perfiles, permisos, tres sucursales, cuatro plantillas de correo, contenido del portal, migraciones y auditoría. Se agregó un registro de auditoría de la limpieza.
 
 Los archivos de Storage se conservaron. El respaldo previo incluye los cuatro esquemas `public`, `privado`, `auth` y `storage`, y existe una copia separada de los archivos. Los respaldos y el informe de la ejecución están en `backups/`, excluido de Git.

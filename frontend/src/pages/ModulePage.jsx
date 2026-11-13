@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, Pencil, Plus, RefreshCw } from 'lucide-react';
+import { Eye, Pencil, Plus, RefreshCw, Info } from 'lucide-react';
 import { can, label, modules } from '../config/modules.js';
 import { newOperation, recordActions } from '../config/operations.js';
 import { useRecords } from '../hooks/useRecords.js';
@@ -76,12 +76,18 @@ export default function ModulePage({
       <Notice success>{notice}</Notice>
       <Notice>{state.error}</Notice>
       {name === 'inventario' && (
-        <section className="panel">
-          <h2>¿El medicamento todavía no existe?</h2>
+        <section className="inventory-catalog-hint" aria-labelledby="inventory-catalog-hint-title">
+          <span className="inventory-catalog-hint-icon" aria-hidden="true"><Info size={21} /></span>
+          <div className="inventory-catalog-hint-copy">
+          <h2 id="inventory-catalog-hint-title">¿El medicamento todavía no existe?</h2>
           <p>
             Primero registra el medicamento en el catálogo y después registra una entrada
             para agregar sus existencias a la sucursal.
           </p>
+          {!can(profile, modules.medicamentos.write) && (
+            <p className="inventory-catalog-hint-note">Solicita a un administrador que registre el nuevo medicamento.</p>
+          )}
+          </div>
           {can(profile, modules.medicamentos.write) ? (
             <button
               className="button secondary"
@@ -90,9 +96,7 @@ export default function ModulePage({
               <Plus size={18} />
               Crear medicamento
             </button>
-          ) : (
-            <p className="muted">Solicita a un administrador que registre el nuevo medicamento.</p>
-          )}
+          ) : null}
         </section>
       )}
       {name === 'medicamentos' && !canWrite && (

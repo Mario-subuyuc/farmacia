@@ -1,4 +1,16 @@
-﻿# Operación y despliegue
+# Operación y despliegue
+
+Actualizado el **13 de noviembre de 2026**. Referencia de datos y permisos: [Estado actual del portal](ESTADO-ACTUAL.md). Las migraciones registradas llegan hasta la 026. Las cargas `database/data/` son manuales; no ejecutar el seeder DEMO para continuar trabajando con la base configurada.
+
+## Configuración actual del personal y catálogo
+
+Hay cinco sucursales y treinta cuentas de personal, además del administrador. Auditor y call center mantienen su alcance especial entre sucursales; asignar una sucursal no sustituye las políticas RLS. Accesos y permisos y Autorizaciones específicas muestran usuario y correo; Auditoría muestra el usuario que realizó la acción.
+
+Los empleados pueden vincularse a una cuenta mediante `id_usuario`, opcional y único. La ficha, salario y estado laboral se registran manualmente. Crear usuarios no genera empleados ni planillas; desactivar el acceso no excluye automáticamente del pago. La planilla toma el salario base de empleados laboralmente activos; bonificación y deducciones se ingresan al generar el período. La planilla 1 de prueba se eliminó con su detalle y egreso; quedó constancia en auditoría.
+
+Los medicamentos comunes se unificaron: diez productos compartidos, treinta lotes y 750 unidades en la instantánea documentada. Los códigos de producto ya no tienen sucursal; los lotes conservan su prefijo local. Los clientes y proveedores también son compartidos; su nomenclatura indica referencia, no restricción de acceso comercial.
+
+Call center consulta disponibilidad por departamento sin pedir coordenadas del cliente. El checkout conserva su cotización y validación de ubicación. Los pedidos PENDIENTES producen avisos en el panel cada treinta segundos y al recuperar foco, con sonido opcional; no son notificaciones push ni correos.
 
 ## Funciones implementadas
 
@@ -11,9 +23,9 @@
 - ADMIN administra **Cupones** y **Contenido del sitio** (misión, visión, programas, FAQ). Cupones tienen fechas inclusivas, mínimo y límite global de usos; se aplican al subtotal con promociones y no al envío. Un cupón utilizado conserva su consumo si se cancela el pedido.
 - El historial conserva hasta 20 códigos de pedido en ese navegador. No es una cuenta de cliente ni sincroniza entre dispositivos. Los códigos permiten recuperar pedidos individualmente en otro equipo.
 
-## Notificaciones sin proveedor
+## Canales de notificación
 
-El correo del checkout es opcional. Se encolan avisos de confirmación, receta, pago y cambios operativos. **Notificaciones** permite al personal consultar pendientes, intentos y errores. Sin proveedor no se envía correo, WhatsApp ni SMS.
+El correo del checkout es opcional. Se encolan avisos de confirmación, receta, pago y cambios operativos. **Notificaciones** permite consultar pendientes, intentos y errores. El canal de correo implementado es SMTP; el adaptador HTTPS siguiente es una alternativa. Sin un canal configurado no se entregan mensajes externos. No hay un envío directo integrado de WhatsApp o SMS.
 
 `npm.cmd run jobs:check` consulta pendientes sin cambiar datos. Para liberar reservas: `npm.cmd run jobs:run`.
 
@@ -59,13 +71,15 @@ El Dockerfile excluye `.env`, copias, archivos de desarrollo y dependencias loca
 
 ## Copias y restauración
 
-Instalar `pg_dump` y `pg_restore` compatibles con el servidor PostgreSQL. `node scripts/backup.js --check` verifica que las herramientas estén disponibles. `npm.cmd run db:backup` crea un archivo custom en `backups/` con public y privado y verifica su catálogo con pg_restore --list. No imprime contraseña ni la pasa como argumento de proceso.
+Instalar `pg_dump` y `pg_restore` compatibles con PostgreSQL del servidor. `node scripts/backup.js --check` verifica su disponibilidad. `npm.cmd run db:backup` crea un archivo custom en `backups/` con los esquemas `public`, `privado`, `auth` y `storage` y verifica su catálogo con `pg_restore --list`. No imprime la contraseña ni la pasa como argumento de proceso.
 
-Guardar las copias fuera del equipo con acceso restringido y definir la retención. Estas copias **no contienen archivos binarios de Supabase Storage ni usuarios de Auth**; se necesita además una estrategia de copia del proyecto Supabase y de los buckets `catalogo` y `recetas`.
+En este equipo están instaladas las herramientas PostgreSQL en `C:/Program Files/PostgreSQL/18/bin`. Si no están en PATH, ejecutar `$env:PG_BIN='C:/Program Files/PostgreSQL/18/bin'` antes del comando. El dump incluye usuarios e identidades de Auth y metadatos de Storage; **no incluye los archivos binarios de los buckets**. Conservar una copia separada de estos archivos y su manifiesto. Los esquemas administrados requieren compatibilidad con el proyecto Supabase destino al restaurar.
+
+`backups/`, los archivos `.dump` y `.backup` están excluidos de Git; existe además un `.gitignore` dentro de la carpeta. Los CSV de credenciales y copias parciales se guardan allí. Un respaldo parcial antes de una operación no sustituye una copia completa. Guardar también una copia externa con acceso restringido y retención definida.
 
 Para probar restauración, usar una base aislada con Auth/roles equivalentes preparados, y `pg_restore --no-owner --no-acl --dbname=BASE_AISLADA copia.dump`. No restaurar sobre producción para probar. La verificación del catálogo no sustituye una restauración completa.
 
-En este entorno no están instalados Docker ni pg_dump/pg_restore: la construcción del contenedor y la copia/restauración real requieren esas herramientas. Los comandos de comprobación informan la limitación sin modificar datos.
+Se han creado dumps reales y comprobado sus catálogos. No se ha realizado una restauración completa en una base aislada ni se ha vuelto a verificar Docker en esta revisión. Para la fecha del último respaldo y sus límites, consultar [Estado actual](ESTADO-ACTUAL.md).
 
 ## Verificación
 
@@ -75,7 +89,7 @@ En este entorno no están instalados Docker ni pg_dump/pg_restore: la construcci
 - `npm.cmd --prefix frontend run test:e2e`: navegador contra API y SQL locales, incluyendo receta, cotización, cupón, cobro, seguimiento, cancelación y contenido editable. En Windows puede usarse PLAYWRIGHT_CHANNEL=msedge si está instalado Edge.
 - CI `.github/workflows/validate.yml` ejecuta tests y build sin secretos ni Supabase remoto. La ejecución en GitHub ocurrirá al subir estos archivos a un repositorio con Actions habilitado.
 
-Validación realizada en esta entrega: 69 pruebas de backend, 17 de frontend y 9 E2E aprobadas; compilación y servicio único con `/api` relativo verificados. En Supabase se comprobaron readiness, contenido, cotización y subida/lectura privada de una imagen temporal; el archivo se eliminó. Las compras de prueba se ejecutaron exclusivamente en SQL local. No se efectuaron cobros, envíos de mensajes ni despliegues externos. La migración 013 también registra los cambios de contenido y cupones en auditoría.
+Los conteos de pruebas de entregas anteriores no describen la suite actual. Las comprobaciones recientes abarcan identidad de auditoría, vínculo empleado/cuenta, unificación de medicamentos sin perder inventario, formulario de empleado, categorías de correos, menú por clic y avisos de inventario/pedidos. La compilación se comprobó tras los cambios visuales. Esta revisión documental no afirma haber ejecutado nuevamente toda la suite ni verificado el despliegue remoto. Las cargas ficticias sí se aplicaron a la base conectada; se distinguen de las pruebas locales aisladas.
 
 Después de solucionar un proveedor, los avisos en ERROR pueden reencolarse explícitamente con `node scripts/maintenance.js --run --retry-errors`. El envío sigue requiriendo `--send-notifications` y configuración HTTPS; conserva los identificadores para evitar duplicados en el proveedor.
 
@@ -95,11 +109,11 @@ Después de verificar credenciales y destinatarios, activar EMAIL_WORKER_ENABLED
 
 `node scripts/inventory-alerts.js` actualiza alertas sin enviar correo; `node scripts/inventory-alerts.js --send` procesa también el correo configurado. La integración anterior de webhook es opcional: no ejecutar dos canales para el mismo propósito sin definir la operación deseada.
 
-Estado de la primera prueba con las credenciales proporcionadas: Gmail devolvió EAUTH / 535. No se enviaron los correos de prueba. EMAIL_WORKER_ENABLED permanece false hasta corregir SMTP_PASS. Las alertas y el calendario funcionan independientemente del correo.
+Histórico SMTP: un primer intento devolvió EAUTH / 535 y posteriormente Gmail aceptó las pruebas tras corregir las credenciales. Ese antecedente no confirma la configuración actual del alojamiento ni su entrega efectiva; las alertas y el calendario funcionan independientemente del correo.
 
 Referencias de implementación: [SMTP con Gmail en Nodemailer](https://nodemailer.com/guides/using-gmail), [FullCalendar React v6](https://fullcalendar.io/docs/v6/react).
 
-Actualización SMTP: después de actualizar la contraseña de aplicación, Gmail aceptó los dos mensajes de prueba (alerta y notificación) al destinatario de validación. EMAIL_WORKER_ENABLED quedó activado en el entorno local y se reanudaron las alertas pendientes del intento con autenticación rechazada. La aceptación del servidor SMTP no verifica lectura ni llegada a la bandeja principal.
+En servidores persistentes, el trabajador depende de `EMAIL_WORKER_ENABLED` y las variables SMTP. En Vercel no se utiliza el timer de correo del proceso: la entrega inmediata de inscripciones se espera por HTTP y los trabajos generales necesitan un programador externo. Véase [Despliegue de correos en Vercel](despliegue-correos-vercel.md).
 
 ## Autocompletado y formato de correos
 
@@ -111,7 +125,9 @@ Todos los correos enviados por `sendEmail` incluyen HTML con marca NexoFarma, ta
 
 El administrador configura cupo y horas de anticipación en Eventos y talleres. El visitante solicita su inscripción desde el calendario público; el correo contiene un enlace de confirmación que vence en dos horas. Abrir el enlace no confirma automáticamente: se debe pulsar Confirmar inscripción. Desde ese mismo enlace se puede cancelar. Solo las inscripciones confirmadas reciben recordatorios; se evita duplicar el recordatorio de la misma fecha. Las reservas pendientes vigentes cuentan para el cupo.
 
-En Diseño de correos se personalizan marca, lema, colores, tipografía, introducción y pie para alertas, pedidos y actividades. La vista previa no envía correo. Los siguientes envíos usan la plantilla guardada y conservan alternativa de texto. El servidor debe estar encendido con EMAIL_WORKER_ENABLED=true. PUBLIC_SITE_URL debe ser la dirección accesible por los destinatarios; localhost solo sirve en el equipo local.
+El servidor rechaza tanto la solicitud como la confirmación si `inicio <= now()`, y rechaza actividades no publicadas o sin cupo. El calendario aún puede mostrar el formulario en eventos pasados. La carga ficticia actual tiene once eventos y 140 inscripciones confirmadas; insertarla no envió ni encoló correos. Los recordatorios automáticos normales pueden alcanzar las direcciones de prueba al acercarse una actividad futura.
+
+En Diseño de correos se personalizan marca, lema, colores, tipografía, introducción y pie por categoría GENERAL, ALERTA, PEDIDO y EVENTO. Cada categoría tiene un ejemplo diferente, el fondo configurable se aplica a todo el correo y se conservan colores personalizados. La vista previa no envía correo. Los siguientes envíos usan la plantilla guardada y conservan texto alternativo. `PUBLIC_SITE_URL` debe ser accesible por los destinatarios; localhost solo sirve en el equipo local. La modalidad de procesamiento depende del alojamiento, según el apartado anterior.
 
 ## Compras, inventario y caja
 

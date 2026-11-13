@@ -1,5 +1,7 @@
 # NexoFarma: frontend React explicado para un junior
 
+Actualizado el 13 de noviembre de 2026. Referencias vigentes: [Estado actual](../docs/ESTADO-ACTUAL.md), [UX/UI](../docs/UX-UI.md) y [Operación](../docs/OPERACION.md). Las cargas DEMO descritas para instalaciones de prueba no deben ejecutarse sobre la base actual; usar únicamente las cargas revisadas de `database/data/` cuando corresponda.
+
 React muestra las pantallas; el backend Node conserva MVC y responde JSON; Supabase guarda los datos. La interfaz está en esta carpeta y usa JavaScript, funciones y CSS normal, sin TypeScript ni Redux. Usa Node **22.12 o superior**.
 
 ## 1. Levantar la interfaz
@@ -52,11 +54,10 @@ La interfaz no crea tablas. Tu error anterior indica que falta `DATABASE_URL` en
 
 ```powershell
 npm.cmd run db:migrate
-npm.cmd run db:seed
 npm.cmd run db:check
 ```
 
-También puedes ejecutar en el **SQL Editor del mismo proyecto Supabase**, en orden: `database/001_schema.sql`, `database/002_operations.sql`, `database/003_public_catalog.sql`, `database/004_demo_products.sql` y `database/seed.sql`. No uses el archivo MySQL descargado: Supabase utiliza PostgreSQL. La migración 004 incorpora 12 medicamentos y existencias distintas por sucursal; el seeder reutiliza sus datos sin sobrescribir stock existente. La cuenta inicial se crea mediante `npm.cmd run db:seed`, como explica la sección siguiente.
+Para una base nueva, aplica todas las migraciones registradas por scripts/migrate.js en orden hasta la 026. No basta con aplicar 001 a 004. La carga DEMO es opcional para entornos aislados y no representa la base actual; no ejecutar database/seed.sql ni db:seed sobre la base ya configurada.
 
 ### Primer usuario y permisos
 
@@ -95,20 +96,20 @@ Si una cuenta anterior tiene un perfil pendiente, asígnalo y pulsa la opción d
 | --- | --- |
 | Catálogo público | Productos, precios, receta, búsqueda y filtros por sucursal/categoría. Sin cuenta y sin operaciones internas. |
 | Inicio | Resumen por sucursal, fondos, prioridades y pedidos pendientes según permisos. |
-| Call center | Coordenadas, medicamentos, stock, precio, sucursales disponibles y entrega estimada; crear pedido. |
+| Call center | Departamento del cliente, medicamentos, stock, precio y sucursales disponibles en ese departamento; crear pedido sin coordenadas del cliente. |
 | Inventario | Lotes, vencimientos, reservas, entradas y ajustes con motivo. |
 | Ventas | Venta con varios medicamentos; anulación de mostrador cuando corresponde. |
 | Pedidos y entregas | Crear, preparar, despachar, entregar, cancelar, devolver o reasignar según estado. |
 | Traslados | Despachar medicamentos y confirmar recepción en destino. |
 | Caja y movimientos | Ingresos/egresos manuales y reversión conservando historial. |
 | Planilla | Pago mensual por sucursal con bonificaciones y deducciones. |
-| Reportes | Caja por fechas/medio de pago, stock, activos, atrasos y exportación CSV de la tabla elegida. |
+| Reportes | Caja por fechas/medio de pago, stock, activos, atrasos y exportación Excel (.xlsx) e impresión/PDF. |
 | Administración | Sucursales, medicamentos, clientes, empleados, activos, mínimos y perfiles autorizados. |
 | Control | Movimientos de medicamentos y auditoría con valores anteriores y nuevos. |
 
 El selector superior cambia el alcance de las consultas. Los formularios solicitan la sucursal de la operación dentro de tus permisos. La búsqueda de texto busca **en la página actual**; los filtros de sucursal/estado/medicamento se envían al servidor. Usa la paginación para ver más registros.
 
-Los precios y el stock definitivos los valida el backend al guardar. La entrega se estima mediante coordenadas y configuración de sucursales; no consulta tráfico ni rutas reales. La receta se confirma en el formulario, sin subir archivos clínicos. No se borran operaciones financieras: se anulan o revierten con motivo.
+Los precios y el stock definitivos los valida el backend al guardar. Call center consulta por departamento; checkout conserva validación de ubicación y configuración de entrega, sin consultar tráfico ni rutas reales. Las recetas se suben como imágenes a Storage privado y el personal autorizado las revisa. Las operaciones financieras se anulan o revierten con motivo; las eliminaciones de mantenimiento realizadas fuera de la interfaz se respaldan y registran en auditoría.
 
 La caja de reportes aplica el rango elegido incluyendo el último día. Inventario y activos muestran la situación actual, no una fotografía histórica de stock. Los importes se presentan en quetzales (GTQ).
 
