@@ -90,6 +90,9 @@ export function Status({ value }) {
 }
 
 export function displayValue(field, value, references = {}, row = {}) {
+  if (field === 'id_usuario' && row.id_empleado !== undefined) {
+    return row.usuario_cuenta || references.cuentas_empleados?.find(account => account.id_usuario === value)?.nombre || (value ? 'Usuario no disponible' : 'Sin cuenta vinculada');
+  }
   if (field === 'actor') return row.actor_usuario || (value ? 'Usuario no disponible' : 'Sistema');
   if (field === 'id_usuario' && row.nombre) return row.nombre;
   if (field === 'disponible' && row.cantidad !== undefined) {

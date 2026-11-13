@@ -113,10 +113,11 @@ function AppContent({ confirmationMessage = '' }) {
         client.getAll('/medicamentos'),
         client.getAll('/clientes'),
         can(profile, modules.empleados.read) ? client.getAll('/empleados') : Promise.resolve([]),
+        can(profile, modules.empleados.read) ? client.getAll('/cuentas-empleados') : Promise.resolve([]),
       ])
-        .then(([proveedores, sucursales, medicamentos, clientes, empleados]) => {
+        .then(([proveedores, sucursales, medicamentos, clientes, empleados, cuentas_empleados]) => {
           if (!ignore)
-            setReferences({ proveedores, sucursales, medicamentos, clientes, empleados });
+            setReferences({ proveedores, sucursales, medicamentos, clientes, empleados, cuentas_empleados });
         })
         .catch((error) => {
           if (!ignore) setReferenceError(error.message);

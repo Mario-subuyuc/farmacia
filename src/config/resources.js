@@ -35,10 +35,12 @@ export const resources = {
       velocidad_kmh: { type: 'number', min: 0.01, max: 200 }, acepta_pedidos: { type: 'boolean' },
     }, filters: ['estado', 'departamento', 'tipo'],
   },
+  'cuentas-empleados': { table: 'cuentas_empleados', id: 'id_usuario', uuid: true, read: branchReaders, filters: [] },
   empleados: {
+    readTable: 'empleados_cuentas',
     table: 'empleados', id: 'id_empleado', read: branchReaders, write: ['ADMIN', 'GERENTE'],
     required: ['codigo', 'id_sucursal', 'nombre', 'apellido', 'puesto', 'salario'],
-    fields: { codigo: { type: 'text', max: 30 }, id_sucursal: idField, nombre: { type: 'text', max: 100 },
+    fields: { id_usuario: { type: 'uuid', nullable: true }, codigo: { type: 'text', max: 30 }, id_sucursal: idField, nombre: { type: 'text', max: 100 },
       apellido: { type: 'text', max: 100 }, puesto: { type: 'text', max: 50 }, salario: moneyField,
       estado: { type: 'enum', values: ['ACTIVO', 'INACTIVO'] } }, filters: ['id_sucursal', 'estado'],
   },

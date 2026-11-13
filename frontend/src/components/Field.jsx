@@ -22,10 +22,11 @@ export function referenceOptions(field, references, profile) {
     medicamentos: 'id_medicamento',
     clientes: 'id_cliente',
     empleados: 'id_empleado',
+    cuentas_empleados: 'id_usuario',
   }[field.lookup];
   return rows.map((row) => ({
     value: row[id],
-    label: `${row.nombre}${row.apellido ? ` ${row.apellido}` : ''}${row.codigo ? ` · ${row.codigo}` : ''}`,
+    label: `${row.nombre}${row.apellido ? ` ${row.apellido}` : ''}${row.codigo ? ` · ${row.codigo}` : ''}${field.lookup === 'cuentas_empleados' ? ` · ${row.email}` : ''}`,
   }));
 }
 
