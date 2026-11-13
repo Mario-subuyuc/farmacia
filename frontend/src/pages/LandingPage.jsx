@@ -130,7 +130,7 @@ export default function LandingPage({ onNavigate, hasSession, page = 'home' }) {
                 <span /> TU FARMACIA, MÁS CERCA
               </span>
               <h1>
-                Cuidarte empiezaaaaa
+                Cuidarte empieza
                 <br />
                 con estar <em>cerca.</em>
               </h1>
