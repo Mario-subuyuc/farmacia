@@ -19,7 +19,6 @@ export default function Layout({
   const [open, setOpen] = useState(false);
   const [menuSearch, setMenuSearch] = useState('');
   const [expandedGroup, setExpandedGroup] = useState(null);
-  const [hoveredGroup, setHoveredGroup] = useState(null);
   const navigationRef = useRef(null);
   const specialNames = {
     inicio: 'Inicio',
@@ -101,7 +100,6 @@ export default function Layout({
     setOpen(false);
     setMenuSearch('');
     setExpandedGroup(null);
-    setHoveredGroup(null);
   }
   const groups = ['Operación', 'Finanzas', 'Administración', 'Control'];
   return (
@@ -139,11 +137,6 @@ export default function Layout({
           >
             <X size={20} />
           </button>
-        </div>
-        <div className="sidebar-location" aria-label="Ubicación actual">
-          <span className="sidebar-location-label">Estás en</span>
-          <strong>{currentTitle}</strong>
-          <span className="sidebar-location-group">{currentGroup}</span>
         </div>
         <div className="navigation-search">
           <label>
@@ -220,33 +213,16 @@ export default function Layout({
               )
             )
               return null;
-            const expanded = Boolean(menuSearch) || expandedGroup === group || hoveredGroup === group;
+            const expanded = Boolean(menuSearch) || expandedGroup === group;
             const groupId = `navigation-group-${groups.indexOf(group)}`;
             return (
               <div
                 className={`nav-group compact-nav-group ${currentGroup === group ? 'is-current' : ''}`}
                 key={group}
-                onMouseEnter={() => {
-                  if (window.matchMedia('(hover: hover)').matches) {
-                    setHoveredGroup(group);
-                    setExpandedGroup(null);
-                  }
-                }}
-                onMouseLeave={() => {
-                  if (!navigationRef.current?.querySelector(`#${groupId}`)?.contains(document.activeElement))
-                    setHoveredGroup(null);
-                }}
-                onBlur={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget)) {
-                    setExpandedGroup(null);
-                    setHoveredGroup(null);
-                  }
-                }}
                 onKeyDown={(event) => {
                   if (event.key === 'Escape') {
                     event.stopPropagation();
                     setExpandedGroup(null);
-                    setHoveredGroup(null);
                     event.currentTarget.querySelector('.nav-category').focus();
                   }
                 }}
@@ -256,7 +232,6 @@ export default function Layout({
                   aria-expanded={expanded}
                   aria-controls={groupId}
                   onClick={() => {
-                    setHoveredGroup(null);
                     setExpandedGroup(expandedGroup === group ? null : group);
                   }}
                 >

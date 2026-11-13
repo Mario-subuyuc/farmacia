@@ -10,3 +10,7 @@ frontend/playwright-report/
 .playwright-browsers/
 backups/
 artifacts/
+
+# Copias de seguridad: pueden contener credenciales y datos privados.
+*.dump
+*.backup

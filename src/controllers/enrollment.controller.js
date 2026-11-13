@@ -5,8 +5,9 @@ import {httpError,databaseError} from '../utils/http-error.js';
 import {processEmails} from '../services/email-worker.js';
 import {publicSiteUrl} from '../config/config.js';
 import {renderEmail} from '../services/email-template.js';
+import {emailPreview} from '../services/email-preview.js';
 export const emailDesignFields={marca:{type:'text',max:80},lema:{type:'text',max:150},color_principal:{type:'color'},color_fondo:{type:'color'},color_alerta:{type:'color'},introduccion:{type:'text',max:500,nullable:true},pie:{type:'text',max:500},fuente:{type:'enum',values:['Arial','Georgia']}};
-export async function previewEmail(req,res){const data=validateFields(req.body,emailDesignFields);res.json({html:renderEmail({subject:'Vista previa de tu correo',event:'RECORDATORIO_EVENTO',text:'Hola, te recordamos tu próxima actividad en la sucursal.\nAquí aparecerá la información del aviso.',template:data})});}
+export async function previewEmail(req,res){const data=validateFields(req.body,{...emailDesignFields,tipo:{type:'enum',values:['GENERAL','ALERTA','PEDIDO','EVENTO']}});res.json({html:renderEmail(emailPreview(data))});}
 // Dependencias del servidor, reemplazables en pruebas; no se toman del HTTP.
 export function createEnrollmentHandlers({adminClient=()=>PortalService.adminClient(),process=processEmails,logger=console}={}) {
  async function enviarCorreosPendientes(client,hash,event) {

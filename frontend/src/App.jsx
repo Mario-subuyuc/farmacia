@@ -1,4 +1,5 @@
 import ExperienceTools from './components/ExperienceTools.jsx';
+import OrderAlertNotice from './components/OrderAlertNotice.jsx';
 import { clearAlertHistory } from './services/user-feedback.js';
 import { useEffect, useState } from 'react';
 import { api } from './services/api.js';
@@ -230,6 +231,7 @@ function AppContent({ confirmationMessage = '' }) {
           Reintentar carga de opciones
         </button>
       )}
+      <OrderAlertNotice {...common} />
       {content}
     </Layout>
   );

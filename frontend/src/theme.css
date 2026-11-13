@@ -654,6 +654,64 @@ tbody tr:hover {
 .swal2-popup {
   color: #18384b;
 }
+tbody tr.inventory-expired,
+tbody tr.inventory-expired:hover {
+  background: #fff0f0;
+}
+tbody tr.inventory-expiring,
+tbody tr.inventory-expiring:hover {
+  background: #fff8e6;
+}
+tbody tr.inventory-empty,
+tbody tr.inventory-empty:hover {
+  background: #eaf3ff;
+}
+.inventory-row-label {
+  display: block;
+  margin-top: 5px;
+  font-weight: 650;
+  color: #315a70;
+}
+.inventory-expired .inventory-row-label { color: #9b2c2c; }
+.inventory-expiring .inventory-row-label { color: #79510a; }
+.order-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border: 1px solid #bad5e8;
+  border-left: 4px solid #087d72;
+  border-radius: 10px;
+  background: #edf6fa;
+  color: #123e54;
+}
+.order-alert-banner p { margin: 6px 0 0; font-size: 12px; }
+.email-design-layout {
+  align-items: start;
+}
+.email-preview-panel {
+  padding: 24px;
+  min-width: 0;
+  background: #f8fbfd;
+}
+.email-preview-panel > p {
+  color: var(--brand-muted);
+  margin: 8px 0 18px;
+  line-height: 1.6;
+}
+.email-design-layout iframe {
+  border-color: var(--brand-border);
+  background: #f3f8fc;
+}
+.email-design-layout input[type='color'] {
+  width: 100%;
+  height: 42px;
+  padding: 5px;
+  cursor: pointer;
+}
 .swal2-popup .swal2-confirm {
   background: var(--brand-primary);
 }
@@ -670,7 +728,7 @@ tbody tr:hover {
   }
 }
 
-/* Categorías compactas: cursor en escritorio; botón en móvil y teclado. */
+/* Categorias compactas: clic o teclado en escritorio y movil. */
 .compact-nav-group {
   margin: 7px 0;
 }

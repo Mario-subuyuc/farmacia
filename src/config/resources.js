@@ -90,5 +90,5 @@ export const resources = {
   'movimientos-medicamentos': { table: 'movimientos_medicamentos', id: 'id_movimiento', read: ['ADMIN', 'GERENTE', 'BODEGA', 'AUDITOR'], filters: ['id_sucursal', 'id_inventario', 'tipo'] },
   'movimientos-caja': { table: 'movimientos_caja', id: 'id_movimiento', read: ['ADMIN', 'GERENTE', 'CAJERO', 'AUDITOR'], filters: ['id_sucursal', 'tipo', 'metodo_pago'] },
   planillas: { table: 'planillas', id: 'id_planilla', read: branchReaders, filters: ['id_sucursal', 'periodo'] },
-  auditoria: { table: 'auditoria', id: 'id_auditoria', read: branchReaders, filters: ['id_sucursal', 'tabla', 'actor', 'accion'] },
+  auditoria: { table: 'auditoria', readTable: 'auditoria_usuarios', id: 'id_auditoria', read: branchReaders, filters: ['id_sucursal', 'tabla', 'actor', 'accion'] },
 };

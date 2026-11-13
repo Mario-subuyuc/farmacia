@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { label } from '../config/modules.js';
 import { dateOnly, dateTime, money, words, today } from '../utils/format.js';
 import { Empty } from './Feedback.jsx';
+import { inventoryStatus } from '../utils/inventory-status.js';
 
 const moneyFields = [
   'costo',
@@ -89,6 +90,7 @@ export function Status({ value }) {
 }
 
 export function displayValue(field, value, references = {}, row = {}) {
+  if (field === 'actor') return row.actor_usuario || (value ? 'Usuario no disponible' : 'Sistema');
   if (field === 'id_usuario' && row.nombre) return row.nombre;
   if (field === 'disponible' && row.cantidad !== undefined) {
     const medicine = references.medicamentos?.find(
@@ -167,24 +169,33 @@ export default function DataTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
-            <tr key={row[rowKey] ?? index}>
-              {columns.map((field) => (
-                <td key={field}>
-                  {['estado', 'tipo'].includes(field) ? (
-                    <Status value={row[field]} />
-                  ) : field === 'fecha_vencimiento' && row[field] <= today() ? (
-                    <span className="expired">{dateOnly(row[field])} · Vencido</span>
-                  ) : (
-                    <span className={moneyFields.includes(field) ? 'amount' : ''}>
-                      {displayValue(field, row[field], references, row)}
-                    </span>
-                  )}
-                </td>
-              ))}
-              {renderActions && <td className="actions-cell">{renderActions(row)}</td>}
-            </tr>
-          ))}
+          {rows.map((row, index) => {
+            const stock = rowKey === 'id_inventario' ? inventoryStatus(row) : null;
+            return (
+              <tr key={row[rowKey] ?? index} className={stock?.className}>
+                {columns.map((field) => (
+                  <td key={field}>
+                    {['estado', 'tipo'].includes(field) ? (
+                      <Status value={row[field]} />
+                    ) : field === 'fecha_vencimiento' && row[field] <= today() ? (
+                      <span className="expired">{dateOnly(row[field])} · Vencido</span>
+                    ) : (
+                      <span className={moneyFields.includes(field) ? 'amount' : ''}>
+                        {displayValue(field, row[field], references, row)}
+                        {field === 'lote' &&
+                          stock?.labels.map((text) => (
+                            <small className="inventory-row-label" key={text}>
+                              {text}
+                            </small>
+                          ))}
+                      </span>
+                    )}
+                  </td>
+                ))}
+                {renderActions && <td className="actions-cell">{renderActions(row)}</td>}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -813,6 +813,7 @@ export const modules = {
 };
 
 export const labels = {
+  actor: 'Usuario',
   id_sucursal: 'Sucursal',
   id_sucursal_origen: 'Origen',
   id_sucursal_destino: 'Destino',

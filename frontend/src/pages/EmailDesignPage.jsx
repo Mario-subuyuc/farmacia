@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { renderEmail } from '../../../src/services/email-template.js';
+import { emailPreview } from '../../../src/services/email-preview.js';
 import { Notice } from '../components/Feedback.jsx';
 const fields = [
   ['marca', 'Nombre de la farmacia', 'text'],
@@ -22,6 +23,7 @@ export default function EmailDesignPage({ client }) {
     client
       .getAll('/plantillas-correo')
       .then((data) => {
+        if (!data.length) throw new Error('No hay plantillas de correo configuradas.');
         setRows(data);
         setId(String(data[0].id_plantilla));
         setForm(data[0]);
@@ -44,14 +46,7 @@ export default function EmailDesignPage({ client }) {
       setBusy(false);
     }
   }
-  const preview = form
-    ? renderEmail({
-        subject: 'Vista previa de la notificación',
-        text: 'Hola, tu inscripción está confirmada.\nTe esperamos en la sucursal en la fecha y hora de tu actividad.',
-        event: 'INSCRIPCION_CONFIRMADA',
-        template: form,
-      })
-    : '';
+  const preview = form ? renderEmail(emailPreview(form)) : '';
   return (
     <div className="page-stack">
       <div className="page-heading">
@@ -70,11 +65,13 @@ export default function EmailDesignPage({ client }) {
               Tipo de correo
               <select
                 value={id}
+                disabled={busy}
                 onChange={(event) => {
                   const value = event.target.value;
                   setId(value);
                   setForm(rows.find((row) => String(row.id_plantilla) === value));
                   setMessage('');
+                  setError('');
                 }}
               >
                 {rows.map((row) => (
@@ -117,9 +114,9 @@ export default function EmailDesignPage({ client }) {
               {busy ? 'Guardando…' : 'Guardar diseño'}
             </button>
           </form>
-          <section className="panel">
+          <section className="panel email-preview-panel">
             <h2>Vista previa</h2>
-            <p>La vista previa no envía mensajes.</p>
+            <p>Ejemplo de la categoría {form.tipo}. La vista previa no envía mensajes.</p>
             <iframe title="Vista previa del correo" sandbox="" srcDoc={preview} />
           </section>
         </div>

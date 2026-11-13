@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('categorías compactas funcionan con cursor, teclado, búsqueda y móvil', async ({ page }) => {
+test('categorías se abren solo con clic o teclado, con búsqueda y móvil', async ({ page }) => {
   await page.goto('/#login');
   await page.getByLabel('Correo electrónico').fill('admin@example.com');
   await page.getByLabel('Contraseña', { exact: true }).fill('test-password');
@@ -11,9 +11,17 @@ test('categorías compactas funcionan con cursor, teclado, búsqueda y móvil', 
   await expect(operation).toHaveAttribute('aria-expanded', 'false');
   await expect(inventory).toBeHidden();
   await operation.hover();
+  await expect(inventory).toBeHidden();
+  await operation.click();
+  await expect(inventory).toBeVisible();
+  await page.locator('#main-content').hover();
+  await expect(inventory).toBeVisible();
+  await operation.click();
+  await expect(inventory).toBeHidden();
+  await operation.click();
   await expect(inventory).toBeVisible();
   await inventory.click();
-  await expect(page.locator('.sidebar-location')).toContainText('Inventario');
+  await expect(page.locator('.workspace-label')).toHaveText('Inventario');
   await page.locator('#main-content').hover();
   await expect(inventory).toBeHidden();
   await operation.focus();
