@@ -19,3 +19,17 @@ Todos están activos, sin promociones, sin reservas y con mínimo de reposición
 Los proveedores se asignan del 01 al 04 de la misma sucursal de referencia; el quinto medicamento usa el proveedor 01. Las fotografías son URL externas ya seleccionadas; sus fuentes están en `imagenes-medicamentos.md`. Pueden mostrar otra marca o cantidad de empaque.
 
 La carga manual `database/data/006_medicamentos_inventario.sql` registra movimientos de entrada para los lotes nuevos, recalcula alertas y no genera compras ni movimientos de caja. Repetirla conserva medicamentos, lotes y mínimos existentes sin reponer stock consumido ni duplicar entradas.
+
+## Medicamentos adicionales exclusivos
+
+La carga `database/data/007_medicamentos_exclusivos.sql` agrega un producto diferente por sucursal, con 25 unidades, mínimo de 10 y vencimiento ficticio `2028-11-30`.
+
+| Sucursal | Medicamento | Código |
+|---|---|---|
+| Guatemala | Cetirizina 10 mg | GUA01-MED-CETI10-01 |
+| Mixco | Vitamina C 500 mg | MIX01-MED-VITC500-01 |
+| Xela | Antiácido suspensión 120 ml | XELA01-MED-ANTI120-01 |
+| Petén | Losartán 50 mg | PET01-MED-LOSA50-01 |
+| Jutiapa | Salbutamol inhalador 100 mcg | JUT01-MED-SALB100-01 |
+
+Ahora son 30 registros, seis medicamentos y 150 unidades por sucursal, 750 unidades en total. Los medicamentos adicionales tienen stock únicamente en su sucursal de referencia; esto no impide futuros traslados autorizados. Se asigna el proveedor 04 de cada sucursal. Losartán y salbutamol tienen el indicador de receta activado para probar ese flujo; estos datos no sustituyen la validación sanitaria del producto real. Se registran entradas de inventario, sin generar compras ni egresos de caja.
