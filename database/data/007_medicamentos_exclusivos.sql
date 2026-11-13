@@ -9,7 +9,7 @@ with tipos(sucursal,sufijo,nombre,categoria,principio,compra,venta,receta,imagen
  ('PET01','LOSA50','Losartán 50 mg','CARDIOVASCULAR','Losartán',22.00,44.00,true,'https://walmartgt.vteximg.com.br/arquivos/ids/291234/Losartan-Mk-50-Mg-20-Tabletas-1-32827.jpg?v=637955915595430000'),
  ('JUT01','SALB100','Salbutamol inhalador 100 mcg','RESPIRATORIO','Salbutamol',35.00,65.00,true,'https://walmartgt.vteximg.com.br/arquivos/ids/356407/Inhalador-Salbutamol-17gr-100mcg-1-56558.jpg?v=638170943568300000')
 )
-select t.*,s.id_sucursal,p.id_proveedor,t.sucursal||'-MED-'||t.sufijo||'-01' codigo
+select t.*,s.id_sucursal,p.id_proveedor,'MED-'||t.sufijo||'-01' codigo
 from tipos t join public.sucursales s on s.codigo=t.sucursal
 join public.proveedores p on p.email=lower(t.sucursal)||'-proveedor-04@example.com';
 
@@ -18,7 +18,7 @@ do $$ begin
 end $$;
 
 insert into public.medicamentos(codigo,nombre,descripcion,categoria,principio_activo,precio_compra,precio_venta,requiere_receta,estado,id_proveedor,imagen_url)
-select codigo,nombre||' · '||sucursal,
+select codigo,nombre,
  'Producto ficticio con stock inicial exclusivo en '||sucursal||'. Unidad: un empaque comercial. Precios, presentación y vencimiento simulados; fotografía referencial. Confirmar requisitos de dispensación antes de uso real.',
  categoria,principio,compra,venta,receta,'ACTIVO',id_proveedor,imagen_url
 from carga_exclusivos on conflict(codigo) do nothing;

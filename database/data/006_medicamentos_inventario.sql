@@ -10,7 +10,7 @@ with tipos(numero,sufijo,nombre,categoria,principio,compra,venta,stock,imagen_ur
  (5,'SUERO','Suero oral','HIDRATACION','Sales de rehidratación oral',2.00,5.00,30,'https://walmartgt.vteximg.com.br/arquivos/ids/807434/93455_01.jpg?v=638820819168330000')
 )
 select s.id_sucursal,s.codigo sucursal,t.*,p.id_proveedor,
- s.codigo||'-MED-'||t.sufijo||'-01' codigo
+ 'MED-'||t.sufijo||'-01' codigo
 from public.sucursales s cross join tipos t
 join public.proveedores p on p.email=lower(s.codigo)||'-proveedor-'||lpad((((t.numero-1)%4)+1)::text,2,'0')||'@example.com'
 where s.codigo in ('GUA01','MIX01','XELA01','PET01','JUT01');
@@ -20,10 +20,10 @@ do $$ begin
 end $$;
 
 insert into public.medicamentos(codigo,nombre,descripcion,categoria,principio_activo,precio_compra,precio_venta,requiere_receta,estado,id_proveedor,imagen_url)
-select codigo,nombre||' · '||sucursal,
+select distinct on (codigo) codigo,nombre,
  'Producto ficticio de referencia. Unidad de inventario: un empaque comercial; en suero, un sobre. Precios y presentación simulados. Fotografía referencial; confirmar marca, empaque y requisitos de dispensación antes de uso real.',
  categoria,principio,compra,venta,false,'ACTIVO',id_proveedor,imagen_url
-from carga_medicamentos on conflict(codigo) do nothing;
+from carga_medicamentos order by codigo,sucursal on conflict(codigo) do nothing;
 
 with nuevos as (
  insert into public.inventario(id_sucursal,id_medicamento,lote,fecha_vencimiento,costo_unitario,cantidad,reservado)
