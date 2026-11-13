@@ -540,7 +540,7 @@ export const modules = {
     id: 'id_cliente',
     read: allRoles,
     write: ['ADMIN', 'GERENTE', 'VENDEDOR', 'CALL_CENTER'],
-    columns: ['nombre', 'apellido', 'telefono', 'email', 'direccion'],
+    columns: ['codigo', 'nombre', 'apellido', 'telefono', 'email', 'direccion'],
     filters: ['codigo'],
     fields: [
       codeField,
